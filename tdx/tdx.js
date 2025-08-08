@@ -25,7 +25,7 @@ function parseQueryString() {
 parseQueryString();
 
 var baseURLObj = document.currentScript.src;
-var baseURL = baseURLObj.split('/').slice(0, -1).join('/')+'/';;
+var baseURL = baseURLObj.split('/').slice(0, -1).join('/')+'/';
 
 // add css
 function addCss(){
