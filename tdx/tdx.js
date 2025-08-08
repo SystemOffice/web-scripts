@@ -24,11 +24,13 @@ function parseQueryString() {
 }
 parseQueryString();
 
+var baseURL = new URL(document.currentScript.src).pathname;
+
 // add css
 function addCss(){
 	var link = document.createElement('link');
 	link.setAttribute('rel', 'stylesheet');
-	link.setAttribute('href', './tdx.css');
+	link.setAttribute('href', baseURL + 'tdx.css');
     link.setAttribute('type', 'text/css');
 	document.head.appendChild(link);
 }
@@ -55,10 +57,10 @@ function dynamicallyLoadScript(url) {
     document.head.appendChild(script);
 }
 
-loadScriptAsync('./tdx-toc.js')
+loadScriptAsync(baseURL + 'tdx-toc.js')
     .then(() => console.log('tdx-toc.js script loaded successfully'))
     .catch(error => console.error(error));
-// dynamicallyLoadScript('./tdx-toc.js');
+// dynamicallyLoadScript(baseURL + 'tdx-toc.js');
 
 function getSearchBox() {
         var node = document.querySelector('input[id^="SiteSearch-text"');
