@@ -28,8 +28,8 @@ parseQueryString();
 function addCss(){
 	var link = document.createElement('link');
 	link.setAttribute('rel', 'stylesheet');
-	link.setAttribute('href', 'https://courses.vccs.edu/tdx.css');
-        link.setAttribute('type', 'text/css');
+	link.setAttribute('href', './tdx.css');
+    link.setAttribute('type', 'text/css');
 	document.head.appendChild(link);
 }
 addCss();
@@ -55,10 +55,10 @@ function dynamicallyLoadScript(url) {
     document.head.appendChild(script);
 }
 
-loadScriptAsync('https://courses.vccs.edu/tdx-toc.js')
+loadScriptAsync('./tdx-toc.js')
     .then(() => console.log('tdx-toc.js script loaded successfully'))
     .catch(error => console.error(error));
-// dynamicallyLoadScript('https://courses.vccs.edu/tdx-toc.js');
+// dynamicallyLoadScript('./tdx-toc.js');
 
 function getSearchBox() {
         var node = document.querySelector('input[id^="SiteSearch-text"');
