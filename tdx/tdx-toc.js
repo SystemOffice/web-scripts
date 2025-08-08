@@ -122,8 +122,8 @@ $('aside[data-target="sticky-navigator"]').stickyNavigator({
 });
 
 function setUpSSCKB (){
-		var baseURL = new URL(document.currentScript.src).pathname;
-
+var baseURLObj = document.currentScript.src;
+var baseURL = baseURLObj.split('/').slice(0, -1).join('/')+'/';
         if (document.location.href.indexOf('SSC/KB/ArticleDet')>-1){
 
                 $('.col-md-4').insertBefore( $ ("#divMainContent"));
