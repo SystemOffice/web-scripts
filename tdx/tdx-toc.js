@@ -20,7 +20,7 @@
 
                 var toclink = document.createElement('link');
                 toclink.setAttribute('rel', 'stylesheet');
-                toclink.setAttribute('href', 'https://courses.vccs.edu/tdx-toc.css');
+                toclink.setAttribute('href', baseURL + 'tdx-toc.css');
                 document.head.appendChild(toclink);
 
 
@@ -122,6 +122,8 @@ $('aside[data-target="sticky-navigator"]').stickyNavigator({
 });
 
 function setUpSSCKB (){
+		var baseURL = new URL(document.currentScript.src).pathname;
+
         if (document.location.href.indexOf('SSC/KB/ArticleDet')>-1){
 
                 $('.col-md-4').insertBefore( $ ("#divMainContent"));
