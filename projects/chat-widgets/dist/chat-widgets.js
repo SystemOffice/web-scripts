@@ -390,8 +390,8 @@ class AnthologyWidget extends BaseWidget {
       return;
     }
     
-    // Load the script first
-    (function(w, d, x, id) {
+    // Load the script and immediately configure - mimic the working static approach
+    (function(w, d, x, id, config, originalConfig) {
       var s = d.createElement('script');
       s.src = 'https://dtn7rvxwwlhud.cloudfront.net/amazon-connect-chat-interface-client.js';
       s.async = true;
@@ -400,15 +400,11 @@ class AnthologyWidget extends BaseWidget {
       w[x] = w[x] || function() {
         (w[x].ac = w[x].ac || []).push(arguments);
       };
-    })(window, document, 'amazon_connect', this.scriptId);
-
-    // Wait for script to load, then apply configuration
-    const applyConfig = () => {
-      if (window.amazon_connect && this.originalConfig.snippetId) {
-        // Apply client-specific configuration
-        window.amazon_connect('snippetId', this.originalConfig.snippetId);
-        
-        window.amazon_connect('styles', {
+      
+      // Apply configuration immediately after setting up the queue function
+      // This mimics the timing of the working static code
+      if (originalConfig.snippetId) {
+        w[x]('styles', {
           iconType: 'CHAT',
           openChat: {
             color: '#ffffff',
@@ -420,39 +416,36 @@ class AnthologyWidget extends BaseWidget {
           }
         });
 
-        window.amazon_connect('supportedMessagingContentTypes', [
+        w[x]('snippetId', originalConfig.snippetId);
+
+        w[x]('supportedMessagingContentTypes', [
           'text/plain',
           'text/markdown',
           'application/vnd.amazonaws.connect.message.interactive',
           'application/vnd.amazonaws.connect.message.interactive.response'
         ]);
 
-        window.amazon_connect('customDisplayNames', {
+        w[x]('customDisplayNames', {
           transcript: {
             botMessageDisplayName: 'Virtual Agent'
           }
         });
 
-        window.amazon_connect('mockLexBotTyping', true);
+        w[x]('mockLexBotTyping', true);
 
-        window.amazon_connect('contactAttributes', {
-          institutionAlias: this.originalConfig.institutionAlias || 'default'
+        w[x]('contactAttributes', {
+          institutionAlias: originalConfig.institutionAlias || 'default'
         });
 
-        window.amazon_connect('customizationObject', {
+        w[x]('customizationObject', {
           composer: {
             disableEmojiPicker: true
           }
         });
-
-        this.initialized = true;
-      } else {
-        // Keep trying until the script is loaded
-        setTimeout(applyConfig, 100);
+        
+        config.initialized = true;
       }
-    };
-    
-    applyConfig();
+    })(window, document, 'amazon_connect', this.scriptId, this, this.originalConfig);
   }
 
   getElementsToToggle() {
