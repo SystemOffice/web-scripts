@@ -17,7 +17,9 @@ window.CHAT_WIDGET_CONFIG = {
   },
   anthology: { 
     enabled: true, 
-    snippetId: 'YOUR_ANTHOLOGY_SNIPPET_ID'
+    snippetId: 'YOUR_ANTHOLOGY_SNIPPET_ID',
+    scriptId: 'YOUR_ANTHOLOGY_SCRIPT_ID',
+    institutionAlias: 'YOUR_ANTHOLOGY_INSTITUTION_ALIAS'
   },
   chatbot: { 
     enabled: true, 
@@ -25,35 +27,7 @@ window.CHAT_WIDGET_CONFIG = {
   }
 };
 </script>
-<script src="https://cdn.jsdelivr.net/gh/SystemOffice/chat-widgets/dist/chat-widgets.min.js"></script>
-```
-
-## Supported Services
-
-### Zoom Contact Center
-```javascript
-zoom: {
-  enabled: true,
-  apiKey: 'YOUR_ZOOM_API_KEY',
-  env: 'us01' // optional
-}
-```
-
-### Anthology (Amazon Connect)
-```javascript
-anthology: {
-  enabled: true,
-  snippetId: 'YOUR_ANTHOLOGY_SNIPPET_ID'
-}
-```
-
-### Chatbot
-```javascript
-chatbot: {
-  enabled: true,
-  org: 'YOUR_ORG_ID',
-  launcherId: 'idalogin' // optional
-}
+<script src="https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/chat-widgets/dist/chat-widgets.min.js"></script>
 ```
 
 ## Features
@@ -77,36 +51,7 @@ chatbot: {
 2. **Test locally**:
   - Make changes to project files.
   - If changes were not pushed to chat-widgets.js, then do so.
-  - Create a temporary test.html file (do not commit this file):
-
-   ```html
-   <!DOCTYPE html>
-   <html>
-   <head><title>Chat Widget Test</title></head>
-   <body>
-     <script>
-       // Get config from URL parameters
-       const params = new URLSearchParams(window.location.search);
-       window.CHAT_WIDGET_CONFIG = {
-         zoom: { 
-           enabled: true,
-           apiKey: params.get('zoom_key') || '',
-           env: params.get('env') || 'us01'
-         },
-         anthology: {
-           enabled: true,
-           snippetId: params.get('anthology_id') || ''
-         },
-         chatbot: {
-           enabled: true,
-           org: params.get('org_id') || ''
-         }
-       };
-     </script>
-     <script src="dist/chat-widgets.js"></script>
-   </body>
-   </html>
-   ```
+  - Create a temporary test.html file (do not commit this file) with the above scripts.
 
    ```bash
    # Start local server
