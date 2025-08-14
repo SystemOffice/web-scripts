@@ -370,6 +370,7 @@ class AnthologyWidget extends BaseWidget {
     
     this.active = false;
     this.initialized = false;
+    this.scriptLoaded = false; // Track if script has been loaded
     // Store the original config separately, don't overwrite the widget config
     this.originalConfig = config;
     
@@ -385,10 +386,12 @@ class AnthologyWidget extends BaseWidget {
     }
   }
 
-  injectScript() {
-    if (document.getElementById(this.scriptId)) {
+  loadScriptOnce() {
+    if (this.scriptLoaded || document.getElementById(this.scriptId)) {
       return;
     }
+    
+    this.scriptLoaded = true;
     
     // Load the script and immediately configure - mimic the working static approach
     (function(w, d, x, id, config, originalConfig) {
@@ -444,6 +447,12 @@ class AnthologyWidget extends BaseWidget {
         });
         
         config.initialized = true;
+        
+        // Start hidden by default - we'll show it when activated
+        setTimeout(() => {
+          const elements = config.getElementsToToggle();
+          elements.forEach(el => el.style.display = 'none');
+        }, 2000);
       }
     })(window, document, 'amazon_connect', this.scriptId, this, this.originalConfig);
   }
@@ -509,24 +518,31 @@ class AnthologyWidget extends BaseWidget {
   }
 
   activate(onDeactivate) {
-    if (!this.initialized) {
-      this.injectScript();
-    }
-
     this.state.active = true;
     this.callbacks.onDeactivate = onDeactivate;
     
-    // Let Amazon Connect do its thing, then invoke and show
-    setTimeout(() => {
-      if (this.state.active) {
-        // 1. First INVOKE the widget (click launch button)
-        this.invokeWidget();
-        
-        // 2. Then manage the chat window visibility
-        this.toggleVisibility(true);
-        this.attachCloseListener();
-      }
-    }, 1500);
+    if (!this.scriptLoaded) {
+      // First time activation - load script and wait for it to initialize
+      this.loadScriptOnce();
+      
+      // Wait longer for first load
+      setTimeout(() => {
+        if (this.state.active) {
+          this.invokeWidget();
+          this.toggleVisibility(true);
+          this.attachCloseListener();
+        }
+      }, 3000);
+    } else {
+      // Subsequent activations - just show the existing widget
+      setTimeout(() => {
+        if (this.state.active) {
+          this.invokeWidget();
+          this.toggleVisibility(true);
+          this.attachCloseListener();
+        }
+      }, 100);
+    }
   }
 }
 
