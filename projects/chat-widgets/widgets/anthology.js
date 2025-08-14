@@ -6,7 +6,7 @@ export class AnthologyWidget extends BaseWidget {
     const widgetConfig = {
       id: 'anthology',
       displayName: 'Student Support Bot',
-      scriptId: config.snippetId || 'demo-anthology-script',
+      scriptId: config.scriptId || 'demo-anthology-script',
       invokeSelector: '#amazon-connect-open-widget-button'
     };
     
@@ -20,6 +20,12 @@ export class AnthologyWidget extends BaseWidget {
     // Validate required config
     if (!this.originalConfig.snippetId) {
       console.warn('Anthology: Snippet ID not configured. Please add your Amazon Connect snippet ID to the configuration.');
+    }
+    if (!this.originalConfig.scriptId) {
+      console.warn('Anthology: Script ID not configured. Please add your Amazon Connect script ID to the configuration.');
+    }
+    if (!this.originalConfig.institutionAlias) {
+      console.warn('Anthology: Institution alias not configured. Please add your institution alias to the configuration.');
     }
   }
 
@@ -74,7 +80,7 @@ export class AnthologyWidget extends BaseWidget {
         window.amazon_connect('mockLexBotTyping', true);
 
         window.amazon_connect('contactAttributes', {
-          institutionAlias: 'germanna204'
+          institutionAlias: this.originalConfig.institutionAlias || 'default'
         });
 
         window.amazon_connect('customizationObject', {
