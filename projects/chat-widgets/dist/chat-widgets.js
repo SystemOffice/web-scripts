@@ -51,7 +51,7 @@
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(80, 80, 180, 0.12), 0 1.5px 6px rgba(0,0,0,0.08);
-  min-width: 220px;
+  min-width: 240px;
   padding: 12px 0;
   z-index: 10000;
   animation: fadeInMenu 0.18s;
@@ -468,6 +468,8 @@ class AnthologyWidget extends BaseWidget {
     
     // Look for Amazon Connect close buttons with more flexible selectors
     const closeSelectors = [
+      'button[data-testid="close-chat-button"]',
+      'button[aria-label="Close chat"]',
       '#amazon-connect-close-widget-button',
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',
@@ -497,6 +499,8 @@ class AnthologyWidget extends BaseWidget {
     if (!this.callbacks.closeListener) return;
     
     const closeSelectors = [
+      'button[data-testid="close-chat-button"]',
+      'button[aria-label="Close chat"]',
       '#amazon-connect-close-widget-button',
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',

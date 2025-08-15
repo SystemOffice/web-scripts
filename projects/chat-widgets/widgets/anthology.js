@@ -112,6 +112,8 @@ export class AnthologyWidget extends BaseWidget {
     
     // Look for Amazon Connect close buttons with more flexible selectors
     const closeSelectors = [
+      'button[data-testid="close-chat-button"]',
+      'button[aria-label="Close chat"]',
       '#amazon-connect-close-widget-button',
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',
@@ -141,6 +143,8 @@ export class AnthologyWidget extends BaseWidget {
     if (!this.callbacks.closeListener) return;
     
     const closeSelectors = [
+      'button[data-testid="close-chat-button"]',
+      'button[aria-label="Close chat"]',
       '#amazon-connect-close-widget-button',
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',
