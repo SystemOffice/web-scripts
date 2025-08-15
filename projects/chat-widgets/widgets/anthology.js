@@ -102,7 +102,37 @@ export class AnthologyWidget extends BaseWidget {
   }
 
   getElementsToToggle() {
-    return document.querySelectorAll('iframe[src*="amazon"], [id*="amazon"], [class*="amazon"]');
+    // Get all Amazon Connect elements but exclude close buttons from visibility management
+    const allElements = Array.from(document.querySelectorAll('iframe[src*="amazon"], [id*="amazon"], [class*="amazon"]'));
+    
+    // Define close button selectors to exclude
+    const closeButtonSelectors = [
+      'button[data-testid="close-chat-button"]',
+      'button[aria-label="Close chat"]',
+      '#amazon-connect-close-widget-button',
+      'button[id="amazon-connect-close-widget-button"]',
+      'button[aria-label="Minimize Chat"]',
+      'button[class*="acCloseButton"]',
+      'button[class*="acButtonStyles"]',
+      '.acCloseButton-0-0-125',
+      '.acCloseButtonStyles-0-0-39',
+      '.acCloseButton-0-0-223',
+      '.acButtonStyles-0-0-213',
+      '.acCloseButton-0-0-41',
+      '.acButtonStyles-0-0-31'
+    ];
+    
+    // Filter out close buttons to prevent them from being hidden during visibility management
+    return allElements.filter(el => {
+      return !closeButtonSelectors.some(selector => {
+        try {
+          return el.matches(selector);
+        } catch (e) {
+          // Handle invalid selectors gracefully
+          return false;
+        }
+      });
+    });
   }
 
   attachCloseListener() {
@@ -118,10 +148,13 @@ export class AnthologyWidget extends BaseWidget {
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',
       'button[class*="acCloseButton"]',
+      'button[class*="acButtonStyles"]',
       '.acCloseButton-0-0-125',
       '.acCloseButtonStyles-0-0-39',
       '.acCloseButton-0-0-223',
-      '.acButtonStyles-0-0-213'
+      '.acButtonStyles-0-0-213',
+      '.acCloseButton-0-0-41',
+      '.acButtonStyles-0-0-31'
     ];
     
     let attached = false;
@@ -149,10 +182,13 @@ export class AnthologyWidget extends BaseWidget {
       'button[id="amazon-connect-close-widget-button"]',
       'button[aria-label="Minimize Chat"]',
       'button[class*="acCloseButton"]',
+      'button[class*="acButtonStyles"]',
       '.acCloseButton-0-0-125',
       '.acCloseButtonStyles-0-0-39',
       '.acCloseButton-0-0-223',
-      '.acButtonStyles-0-0-213'
+      '.acButtonStyles-0-0-213',
+      '.acCloseButton-0-0-41',
+      '.acButtonStyles-0-0-31'
     ];
     
     closeSelectors.forEach(selector => {
