@@ -8,7 +8,9 @@ export class BaseWidget {
     this.state = { active: false, initialized: false };
     this.callbacks = { onDeactivate: null, closeListener: null };
     this.invokeRetryCount = 0; // Initialize retry count
+    this.firstActivation = true; // Track first activation for timing delays
   }
+
 
   injectScript() {
     if (this.state.initialized) return;
@@ -133,6 +135,9 @@ export class BaseWidget {
     this.state.active = true;
     this.callbacks.onDeactivate = onDeactivate;
     
+    // Dynamic timing delays: longer for first activation, shorter for subsequent
+    const delay = this.firstActivation ? 2000 : 500;
+    
     setTimeout(() => {
       if (this.state.active) {
         // 1. First INVOKE the widget (click launch button)
@@ -141,8 +146,11 @@ export class BaseWidget {
         // 2. Then manage the chat window visibility
         this.toggleVisibility(true);
         this.attachCloseListener();
+        
+        // Mark first activation as complete
+        this.firstActivation = false;
       }
-    }, 500);
+    }, delay);
   }
 
   deactivate(callback) {
