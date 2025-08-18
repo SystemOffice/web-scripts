@@ -136,7 +136,7 @@ export class BaseWidget {
     this.callbacks.onDeactivate = onDeactivate;
     
     // Dynamic timing delays: longer for first activation, shorter for subsequent
-    const delay = this.firstActivation ? 2000 : 500;
+    const delay = this.firstActivation ? 1500 : 300;
     
     setTimeout(() => {
       if (this.state.active) {

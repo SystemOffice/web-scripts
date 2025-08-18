@@ -307,7 +307,7 @@ class BaseWidget {
     this.callbacks.onDeactivate = onDeactivate;
     
     // Dynamic timing delays: longer for first activation, shorter for subsequent
-    const delay = this.firstActivation ? 2000 : 500;
+    const delay = this.firstActivation ? 1500 : 300;
     
     setTimeout(() => {
       if (this.state.active) {
@@ -352,7 +352,7 @@ class ZoomWidget extends BaseWidget {
       },
       invokeSelector: '.livesdk__invitation',
       closeSelector: '.css-1u2heh6',
-      elementSelectors: ['[class*="livesdk"]', '[class*="zcc"]', '[id*="zcc"]', '[class*="zoom"]'],
+      elementSelectors: ['[class*="livesdk"]', '[class*="zcc"]', '[id*="zcc"]', '[class*="zoom"]', 'button[aria-label="Leave"]'],
       invokeRetryDelay: 150, // Shorter delay since button appears quickly
       invokeMaxRetries: 40   // Fewer retries (6 seconds total)
     });
@@ -361,6 +361,92 @@ class ZoomWidget extends BaseWidget {
     if (!config.apiKey || config.apiKey === 'DEMO_KEY') {
       console.warn('Zoom: API key not configured. Please add your Zoom API key to the configuration.');
     }
+  }
+
+  attachCloseListener() {
+    if (!this.state.active) return;
+
+    this.callbacks.closeListener = () => this.deactivate(this.callbacks.onDeactivate);
+    
+    // Use event delegation on document to catch dynamically created buttons
+    this.callbacks.documentClickListener = (event) => {
+      const target = event.target;
+      
+      // Check if clicked element matches our close button criteria
+      const isNextButton = target.matches('button[aria-label="Next"]') || 
+                          target.matches('.css-1mv3bnz') ||
+                          target.closest('button[aria-label="Next"]') ||
+                          target.closest('.css-1mv3bnz');
+                          
+      const isLeaveButton = target.matches('button[aria-label="Leave"]') || 
+                           target.matches('.css-1rzxt70') ||
+                           target.closest('button[aria-label="Leave"]') ||
+                           target.closest('.css-1rzxt70');
+                           
+      const isOriginalClose = target.matches('.css-1u2heh6') ||
+                             target.closest('.css-1u2heh6');
+      
+      if ((isNextButton || isLeaveButton || isOriginalClose) && this.state.active) {
+        this.callbacks.closeListener();
+      }
+    };
+    
+    // Add document-level click listener for dynamic buttons
+    document.addEventListener('click', this.callbacks.documentClickListener, true);
+    
+    // Also try direct attachment for existing buttons (as backup)
+    this.attachDirectListeners();
+  }
+  
+  attachDirectListeners() {
+    const closeSelectors = [
+      '.css-1u2heh6',
+      'button[aria-label="Next"]',
+      'button[aria-label="Leave"]',
+      '.css-1mv3bnz',
+      '.css-1rzxt70'
+    ];
+    
+    closeSelectors.forEach(selector => {
+      const buttons = document.querySelectorAll(selector);
+      buttons.forEach(button => {
+        button.removeEventListener('click', this.callbacks.closeListener);
+        button.addEventListener('click', this.callbacks.closeListener);
+      });
+    });
+    
+    // Retry if no buttons found yet
+    if (this.state.active && document.querySelectorAll(closeSelectors.join(',')).length === 0) {
+      setTimeout(() => this.attachDirectListeners(), 500);
+    }
+  }
+
+  removeCloseListener() {
+    if (!this.callbacks.closeListener) return;
+    
+    // Remove document-level listener
+    if (this.callbacks.documentClickListener) {
+      document.removeEventListener('click', this.callbacks.documentClickListener, true);
+      this.callbacks.documentClickListener = null;
+    }
+    
+    // Remove direct listeners
+    const closeSelectors = [
+      '.css-1u2heh6',
+      'button[aria-label="Next"]',
+      'button[aria-label="Leave"]',
+      '.css-1mv3bnz',
+      '.css-1rzxt70'
+    ];
+    
+    closeSelectors.forEach(selector => {
+      const buttons = document.querySelectorAll(selector);
+      buttons.forEach(button => {
+        button.removeEventListener('click', this.callbacks.closeListener);
+      });
+    });
+    
+    this.callbacks.closeListener = null;
   }
 }
 
@@ -504,7 +590,45 @@ class AnthologyWidget extends BaseWidget {
 
     this.callbacks.closeListener = () => this.deactivate(this.callbacks.onDeactivate);
     
-    // Look for Amazon Connect close buttons with more flexible selectors
+    // Use event delegation on document to catch dynamically created buttons
+    this.callbacks.documentClickListener = (event) => {
+      const target = event.target;
+      
+      // Check if clicked element matches our Amazon Connect close button criteria
+      const isCloseButton = target.matches('button[data-testid="close-chat-button"]') ||
+                           target.matches('button[aria-label="Close chat"]') ||
+                           target.matches('#amazon-connect-close-widget-button') ||
+                           target.matches('button[id="amazon-connect-close-widget-button"]') ||
+                           target.matches('button[aria-label="Minimize Chat"]') ||
+                           target.matches('button[class*="acCloseButton"]') ||
+                           target.matches('button[class*="acButtonStyles"]') ||
+                           target.matches('.acCloseButton-0-0-125') ||
+                           target.matches('.acCloseButtonStyles-0-0-39') ||
+                           target.matches('.acCloseButton-0-0-223') ||
+                           target.matches('.acButtonStyles-0-0-213') ||
+                           target.matches('.acCloseButton-0-0-41') ||
+                           target.matches('.acButtonStyles-0-0-31') ||
+                           target.closest('button[data-testid="close-chat-button"]') ||
+                           target.closest('button[aria-label="Close chat"]') ||
+                           target.closest('#amazon-connect-close-widget-button') ||
+                           target.closest('button[id="amazon-connect-close-widget-button"]') ||
+                           target.closest('button[aria-label="Minimize Chat"]') ||
+                           target.closest('button[class*="acCloseButton"]') ||
+                           target.closest('button[class*="acButtonStyles"]');
+      
+      if (isCloseButton && this.state.active) {
+        this.callbacks.closeListener();
+      }
+    };
+    
+    // Add document-level click listener for dynamic buttons
+    document.addEventListener('click', this.callbacks.documentClickListener, true);
+    
+    // Also try direct attachment for existing buttons (as backup)
+    this.attachDirectListeners();
+  }
+  
+  attachDirectListeners() {
     const closeSelectors = [
       'button[data-testid="close-chat-button"]',
       'button[aria-label="Close chat"]',
@@ -521,24 +645,30 @@ class AnthologyWidget extends BaseWidget {
       '.acButtonStyles-0-0-31'
     ];
     
-    let attached = false;
     closeSelectors.forEach(selector => {
-      const closeBtn = document.querySelector(selector);
-      if (closeBtn && !attached) {
-        closeBtn.removeEventListener('click', this.callbacks.closeListener);
-        closeBtn.addEventListener('click', this.callbacks.closeListener);
-        attached = true;
-      }
+      const buttons = document.querySelectorAll(selector);
+      buttons.forEach(button => {
+        button.removeEventListener('click', this.callbacks.closeListener);
+        button.addEventListener('click', this.callbacks.closeListener);
+      });
     });
     
-    if (!attached && this.state.active) {
-      setTimeout(() => this.attachCloseListener(), 500);
+    // Retry if no buttons found yet
+    if (this.state.active && document.querySelectorAll(closeSelectors.join(',')).length === 0) {
+      setTimeout(() => this.attachDirectListeners(), 500);
     }
   }
 
   removeCloseListener() {
     if (!this.callbacks.closeListener) return;
     
+    // Remove document-level listener
+    if (this.callbacks.documentClickListener) {
+      document.removeEventListener('click', this.callbacks.documentClickListener, true);
+      this.callbacks.documentClickListener = null;
+    }
+    
+    // Remove direct listeners
     const closeSelectors = [
       'button[data-testid="close-chat-button"]',
       'button[aria-label="Close chat"]',
@@ -556,10 +686,10 @@ class AnthologyWidget extends BaseWidget {
     ];
     
     closeSelectors.forEach(selector => {
-      const closeBtn = document.querySelector(selector);
-      if (closeBtn) {
-        closeBtn.removeEventListener('click', this.callbacks.closeListener);
-      }
+      const buttons = document.querySelectorAll(selector);
+      buttons.forEach(button => {
+        button.removeEventListener('click', this.callbacks.closeListener);
+      });
     });
     
     this.callbacks.closeListener = null;
@@ -712,6 +842,7 @@ function createUnifiedButton(state) {
   unifiedButton.id = 'chat-widget-main-btn';
   unifiedButton.innerHTML = '<span class="chat-widget-icon"></span><span class="chat-widget-label">Chat</span>';
   unifiedButton.className = 'chat-widget-btn chat-widget-btn-modern';
+  unifiedButton.setAttribute('aria-label', 'Open chat options menu');
   unifiedButton.onclick = () => {
     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
   };
