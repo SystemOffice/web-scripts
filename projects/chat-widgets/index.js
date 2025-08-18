@@ -85,6 +85,7 @@ function createUnifiedButton(state) {
   unifiedButton.id = 'chat-widget-main-btn';
   unifiedButton.innerHTML = '<span class="chat-widget-icon"></span><span class="chat-widget-label">Chat</span>';
   unifiedButton.className = 'chat-widget-btn chat-widget-btn-modern';
+  unifiedButton.setAttribute('aria-label', 'Open chat options menu');
   unifiedButton.onclick = () => {
     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
   };
