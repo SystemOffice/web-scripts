@@ -15,6 +15,7 @@ export class AnthologyWidget extends BaseWidget {
     this.active = false;
     this.initialized = false;
     this.scriptLoaded = false; // Track if script has been loaded
+    this.firstClose = true; // Track if this is the first close attempt
     // Store the original config separately, don't overwrite the widget config
     this.originalConfig = config;
     
@@ -138,7 +139,18 @@ export class AnthologyWidget extends BaseWidget {
   attachCloseListener() {
     if (!this.state.active) return;
 
-    this.callbacks.closeListener = () => this.deactivate(this.callbacks.onDeactivate);
+    this.callbacks.closeListener = () => {
+      // Only add delay on first close attempt to prevent race condition
+      // Subsequent closes work fine without delay
+      const delay = this.firstClose ? 500 : 0;
+      
+      setTimeout(() => {
+        if (this.state.active) {
+          this.deactivate(this.callbacks.onDeactivate);
+          this.firstClose = false; // Mark first close as complete
+        }
+      }, delay);
+    };
     
     // Use event delegation on document to catch dynamically created buttons
     this.callbacks.documentClickListener = (event) => {
@@ -147,6 +159,7 @@ export class AnthologyWidget extends BaseWidget {
       // Check if clicked element matches our Amazon Connect close button criteria
       const isCloseButton = target.matches('button[data-testid="close-chat-button"]') ||
                            target.matches('button[aria-label="Close chat"]') ||
+                           target.matches('button.sc-htoDjs') ||  // Match the specific class from your example
                            target.matches('#amazon-connect-close-widget-button') ||
                            target.matches('button[id="amazon-connect-close-widget-button"]') ||
                            target.matches('button[aria-label="Minimize Chat"]') ||

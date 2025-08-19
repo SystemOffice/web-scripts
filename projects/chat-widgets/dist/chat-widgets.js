@@ -588,7 +588,15 @@ class AnthologyWidget extends BaseWidget {
   attachCloseListener() {
     if (!this.state.active) return;
 
-    this.callbacks.closeListener = () => this.deactivate(this.callbacks.onDeactivate);
+    this.callbacks.closeListener = () => {
+      // Add delay to allow Amazon Connect to process the close action first
+      // This prevents the race condition on first click
+      setTimeout(() => {
+        if (this.state.active) {
+          this.deactivate(this.callbacks.onDeactivate);
+        }
+      }, 500);
+    };
     
     // Use event delegation on document to catch dynamically created buttons
     this.callbacks.documentClickListener = (event) => {
@@ -597,6 +605,7 @@ class AnthologyWidget extends BaseWidget {
       // Check if clicked element matches our Amazon Connect close button criteria
       const isCloseButton = target.matches('button[data-testid="close-chat-button"]') ||
                            target.matches('button[aria-label="Close chat"]') ||
+                           target.matches('button.sc-htoDjs') ||  // Match the specific class from your example
                            target.matches('#amazon-connect-close-widget-button') ||
                            target.matches('button[id="amazon-connect-close-widget-button"]') ||
                            target.matches('button[aria-label="Minimize Chat"]') ||
