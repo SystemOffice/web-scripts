@@ -33,7 +33,9 @@ export class ChatbotWidget extends BaseWidget {
     const hideAttempts = [500, 1000, 1500, 2000, 2500, 3000];
     hideAttempts.forEach(delay => {
       setTimeout(() => {
-        this.toggleVisibility(false);
+        if (!this.state.active) {
+          this.toggleVisibility(false);
+        }
       }, delay);
     });
   }
