@@ -53,7 +53,7 @@ function loadScriptAsync(src) {
 function dynamicallyLoadScript(url) {
     var script = document.createElement("script");  // create a script DOM node
     script.src = url;  // set its src to the provided URL
-    script.defer =
+    // script.defer =
 
     document.head.appendChild(script);
 }
@@ -62,6 +62,24 @@ loadScriptAsync(baseURL + 'tdx-toc.js')
     .then(() => console.log('tdx-toc.js script loaded successfully'))
     .catch(error => console.error(error));
 // dynamicallyLoadScript(baseURL + 'tdx-toc.js');
+
+function runMarkdown(){
+	if (marked !== undefined){
+		document.querySelectorAll('.js-custom-attributes-container .form-group .wrap-text').forEach(function(element) {
+		  // Perform an action on each 'element'
+		  if (/[\#\-]/.test(element.innerHTML)){
+			element.innerHTML = marked.parse(element.innerHTML.trim().replaceAll('<br>','\r\n'));
+		  }
+		});
+		
+		var aboutMe = document.querySelector('#divAboutMe p');
+		if (/[\#\-]/.test(aboutMe.outerHTML)){
+			aboutMe.outerHTML = marked.parse(aboutMe.innerHTML.trim().replaceAll('<br>','\r\n'));
+		}
+	}
+}
+
+loadScriptAsync('https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js').then(() => runMarkdown());
 
 function getSearchBox() {
         var node = document.querySelector('input[id^="SiteSearch-text"');
