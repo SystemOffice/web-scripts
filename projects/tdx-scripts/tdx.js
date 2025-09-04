@@ -96,6 +96,21 @@ function moveDetailsDown() {
 
 moveDetailsDown();
 
+function checkImages(){
+	if (document.querySelector('a[href*="Edit"]')){
+		$("img:not([alt]), img[alt='']").each(function() {
+				$(this).before("<a href=\"https://www.w3.org/WAI/tutorials/images/decorative/\" \
+						target=\"new\" \
+						title=\"possibly missing alt tag, review url for details\" \
+						class=\"altSpan\" \
+						style=\"color:black;font-weight:bold;font-family:sans-serif;font-size:small;background-color:yellow;speak:literal-punctuation;\">\
+						Image❌alt=\""+$(this).attr('alt')+"</a>");
+			});
+	}
+}
+
+checkImages();
+
 /*
 // now done in pure css
 function isTech(){
