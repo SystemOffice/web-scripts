@@ -2,4 +2,5 @@
 
 - canvas
 - chat-widgets
+- orgchart
 - tdx-scripts
