@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Organization Chart Plugin</title>
+  <link rel="icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/svgs/solid/sitemap.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/orgchart/dist/css/jquery.orgchart.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    #chart-container {
+      width: 100%;
+      height: auto;
+      text-align: center;
+      border: 1px solid #aaa;
+    }
+
+    .orgchart {
+      background-image: none;
+    }
+    
+    .orgchart .node:hover { 
+      z-index:10 
+    }
+
+    .orgchart .node .title {
+      min-width: 160px;
+      width: auto;
+      background-color: #002359;
+    }
+    
+    .orgchart .node .content {
+      width: auto;
+      padding: 0 3px;
+    }
+
+    .orgchart .second-menu-icon {
+      transition: opacity .5s;
+      opacity: 0;
+      right: -5px;
+      top: -5px;
+      z-index: 20;
+      position: absolute;
+    }
+
+    .orgchart .node:hover .second-menu-icon { 
+      opacity: 1; 
+      cursor: pointer;
+    }
+
+    .orgchart .node .second-menu {
+      display: none;
+      position: absolute;
+      top: 20px;
+      right: -70px;
+      border-radius: 10px;
+      padding: 5px;
+      box-shadow: 0 0 10px 1px #999;
+      background-color: #fff;
+      z-index: 10;
+    }
+
+    .node.top-level-node .title, .node.top-level-node .content, .node.root-node .title, .node.root-node .content {
+      height: 40px !important;
+      font-size: 16px !important;
+      padding: 10px !important;
+    }
+
+    .orgchart .manager .title {
+      background-color: #640016;
+    }
+      </style>
+</head>
+<body>
+  <div id="chart-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/orgchart/dist/js/jquery.orgchart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.min.js"></script>
+  <script type="text/javascript" src="orgchart2.js">
+  </script>
+</body>
+</html>
