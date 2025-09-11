@@ -111,6 +111,73 @@ function checkImages(){
 
 checkImages();
 
+function copyTableColumnToClipboard(table, columnIndex) {
+  // console.log(table,columnIndex);
+  // const table = document.getElementById(tableId);
+  if (!table) {
+    console.error("Table with ID '" + tableId + "' not found.");
+    return;
+  }
+
+  let columnData = [];
+  const rows = table.rows;
+
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].cells;
+    if (cells.length > columnIndex) {
+      columnData.push(cells[columnIndex].textContent.trim());
+    }
+  }
+
+  const textToCopy = columnData.join('\n'); // Join with newlines for multi-line copy
+
+  navigator.clipboard.writeText(textToCopy)
+    .then(() => {
+      console.log('Column data copied to clipboard!');
+    })
+    .catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+}
+
+function addCopyToColumnHeadings(){
+	document.querySelectorAll('table th')
+		.forEach((item, i) => {
+			let currentElement = item;
+			let tableElement = null;
+			
+			while (currentElement && currentElement.tagName !== 'TABLE') {
+			  currentElement = currentElement.parentElement;
+			}
+			
+			if (currentElement && currentElement.tagName === 'TABLE') {
+				tableElement = currentElement;
+			}
+		
+			// console.log(item,i);
+			item.insertAdjacentHTML('beforeend', "<i class=\"fa-solid fa-copy\" style=\"display:none;\"></i>");
+
+			item.onmouseover = function(e){
+				// console.log('test');
+				item.querySelector(':scope i').style.display = 'inline-block';
+				item.title='Click to copy column';
+				item.style.cursor = 'pointer';
+			};		
+			item.onmouseout = function(e){
+				// console.log('test2');
+				item.querySelector(':scope i').style.display = 'none';
+				item.title='';
+			};
+			item.onclick = function(e){
+				copyTableColumnToClipboard(tableElement, i);
+			}
+		}
+	);
+}
+
+addCopyToColumnHeadings();
+
+
 /*
 // now done in pure css
 function isTech(){
