@@ -4,6 +4,9 @@ import { ChatWidgetState } from './state.js';
 import { ZoomWidget } from './widgets/zoom.js';
 import { AnthologyWidget } from './widgets/anthology.js';
 import { ChatbotWidget } from './widgets/chatbot.js';
+import { defaultConfig } from './config.js';
+import { defaultErrorHandler } from './error-handler.js';
+import { defaultLogger } from './logger.js';
 
 // Domain-based configuration loading
 async function loadClientConfig() {
@@ -34,34 +37,63 @@ async function loadClientConfig() {
 
 // Initialize widgets with client config
 let widgets = [];
+let widgetRegistry = new Map();
 let unifiedButtonContainer = null;
 let unifiedButton = null;
 let menu = null;
 
 async function initializeWidgets() {
-  const config = await loadClientConfig();
-  
-  widgets = [];
-  
-  if (config.zoom?.enabled) {
-    widgets.push(new ZoomWidget(config.zoom));
+  try {
+    defaultLogger.info('Initializing chat widget system');
+    const config = await loadClientConfig();
+
+    widgets = [];
+    widgetRegistry.clear();
+
+    if (config.zoom?.enabled) {
+      const zoomWidget = new ZoomWidget(config.zoom);
+      widgets.push(zoomWidget);
+      widgetRegistry.set(zoomWidget.id, zoomWidget);
+    }
+
+    if (config.anthology?.enabled) {
+      const anthologyWidget = new AnthologyWidget(config.anthology);
+      widgets.push(anthologyWidget);
+      widgetRegistry.set(anthologyWidget.id, anthologyWidget);
+    }
+
+    if (config.chatbot?.enabled) {
+      const chatbotWidget = new ChatbotWidget(config.chatbot);
+      widgets.push(chatbotWidget);
+      widgetRegistry.set(chatbotWidget.id, chatbotWidget);
+    }
+
+    // Connect widget registry to error handler
+    defaultErrorHandler.setWidgetRegistry(widgetRegistry);
+
+    if (widgets.length === 0) {
+      defaultLogger.warn('No chat widgets configured for this domain');
+      return;
+    }
+
+    defaultLogger.info(`Initialized ${widgets.length} widgets: ${widgets.map(w => w.id).join(', ')}`);
+
+    // Mount all widgets
+    for (const widget of widgets) {
+      try {
+        await widget.mount();
+      } catch (error) {
+        defaultLogger.error(`Failed to mount widget ${widget.id}`, { error: error.message });
+      }
+    }
+
+    const state = new ChatWidgetState(widgets);
+    createUnifiedButton(state);
+
+  } catch (error) {
+    defaultLogger.error('Widget system initialization failed', { error: error.message });
+    await defaultErrorHandler.handleWidgetError(error, 'system_init');
   }
-  
-  if (config.anthology?.enabled) {
-    widgets.push(new AnthologyWidget(config.anthology));
-  }
-  
-  if (config.chatbot?.enabled) {
-    widgets.push(new ChatbotWidget(config.chatbot));
-  }
-  
-  if (widgets.length === 0) {
-    console.warn('No chat widgets configured for this domain');
-    return;
-  }
-  
-  const state = new ChatWidgetState(widgets);
-  createUnifiedButton(state);
 }
 
 function setUnifiedButtonVisibility(visible) {
@@ -71,12 +103,14 @@ function setUnifiedButtonVisibility(visible) {
 }
 
 function createUnifiedButton(state) {
+  const uiConfig = defaultConfig.get('ui.position');
+
   unifiedButtonContainer = document.createElement('div');
   unifiedButtonContainer.id = 'chat-widget-container';
   unifiedButtonContainer.style.position = 'fixed';
-  unifiedButtonContainer.style.bottom = '32px';
-  unifiedButtonContainer.style.right = '32px';
-  unifiedButtonContainer.style.zIndex = '9999';
+  unifiedButtonContainer.style.bottom = uiConfig.bottom;
+  unifiedButtonContainer.style.right = uiConfig.right;
+  unifiedButtonContainer.style.zIndex = uiConfig.zIndex;
   unifiedButtonContainer.style.display = 'flex';
   unifiedButtonContainer.style.flexDirection = 'column';
   unifiedButtonContainer.style.alignItems = 'flex-end';

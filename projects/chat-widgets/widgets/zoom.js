@@ -33,22 +33,38 @@ export class ZoomWidget extends BaseWidget {
     // Use event delegation on document to catch dynamically created buttons
     this.callbacks.documentClickListener = (event) => {
       const target = event.target;
-      
+
+      // Debug logging for all clicks when Zoom is active
+      if (this.state.active && (target.tagName === 'BUTTON' || target.closest('button'))) {
+        console.log('🔍 Zoom: Button clicked', {
+          tag: target.tagName,
+          ariaLabel: target.getAttribute('aria-label'),
+          className: target.className,
+          id: target.id,
+          closestButton: target.closest('button')?.outerHTML?.substring(0, 200)
+        });
+      }
+
       // Check if clicked element matches our close button criteria
-      const isNextButton = target.matches('button[aria-label="Next"]') || 
+      const isNextButton = target.matches('button[aria-label="Next"]') ||
                           target.matches('.css-1mv3bnz') ||
                           target.closest('button[aria-label="Next"]') ||
                           target.closest('.css-1mv3bnz');
-                          
-      const isLeaveButton = target.matches('button[aria-label="Leave"]') || 
+
+      const isLeaveButton = target.matches('button[aria-label="Leave"]') ||
                            target.matches('.css-1rzxt70') ||
                            target.closest('button[aria-label="Leave"]') ||
                            target.closest('.css-1rzxt70');
-                           
+
       const isOriginalClose = target.matches('.css-1u2heh6') ||
                              target.closest('.css-1u2heh6');
-      
+
       if ((isNextButton || isLeaveButton || isOriginalClose) && this.state.active) {
+        console.log('✅ Zoom: Close button detected, calling deactivate', {
+          isNextButton,
+          isLeaveButton,
+          isOriginalClose
+        });
         this.callbacks.closeListener();
       }
     };
