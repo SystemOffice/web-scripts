@@ -192,6 +192,20 @@ export class AnthologyWidget extends BaseWidget {
     this.callbacks.documentClickListener = (event) => {
       const target = event.target;
 
+      // Debug: Log all button clicks to see what we're missing
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        const button = target.tagName === 'BUTTON' ? target : target.closest('button');
+        console.log('🔍 Anthology: Button clicked:', {
+          tagName: button.tagName,
+          textContent: button.textContent?.trim(),
+          'data-testid': button.getAttribute('data-testid'),
+          'aria-label': button.getAttribute('aria-label'),
+          className: button.className,
+          id: button.id,
+          outerHTML: button.outerHTML
+        });
+      }
+
       // Check if clicked element is a CLOSE button (should return to unified menu)
       const isCloseButton = target.matches('button[data-testid="close-chat-button"]') ||
                             target.matches('button[aria-label="Close chat"]') ||
