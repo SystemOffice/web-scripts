@@ -188,71 +188,10 @@ export class AnthologyWidget extends BaseWidget {
       }, delay);
     };
 
-    // Document-level click listener for Amazon Connect buttons
-    this.callbacks.documentClickListener = (event) => {
-      const target = event.target;
+    console.log('🔍 Anthology: Production mode - button click detection disabled, relying on widget frame state monitoring only');
 
-      // Debug: Log all button clicks to see what we're missing
-      if (target.tagName === 'BUTTON' || target.closest('button')) {
-        const button = target.tagName === 'BUTTON' ? target : target.closest('button');
-        console.log('🔍 Anthology: Button clicked:', {
-          tagName: button.tagName,
-          textContent: button.textContent?.trim(),
-          'data-testid': button.getAttribute('data-testid'),
-          'aria-label': button.getAttribute('aria-label'),
-          className: button.className,
-          id: button.id,
-          outerHTML: button.outerHTML
-        });
-      }
-
-      // Check if clicked element is a CLOSE button (should return to unified menu)
-      const isCloseButton = target.matches('button[data-testid="close-chat-button"]') ||
-                            target.matches('button[aria-label="Close chat"]') ||
-                            target.matches('button.sc-htoDjs.jkDoJG.sc-iAyFgw.gswgLa') ||  // Close button specific classes
-                            target.matches('button[class*="acCloseButtonStyles"]') ||  // Generic match for acCloseButtonStyles-X-X-XX
-                            (target.textContent && target.textContent.trim() === 'Close') ||  // Any button with "Close" text
-                            target.closest('button[data-testid="close-chat-button"]') ||
-                            target.closest('button[aria-label="Close chat"]') ||
-                            target.closest('button[class*="acCloseButtonStyles"]');
-
-      // Check if clicked element is a MINIMIZE button (should just minimize, not return to unified menu)
-      const isMinimizeButton = (target.matches('button[aria-label="Minimize Chat"]') ||
-                               target.matches('#amazon-connect-close-widget-button') ||
-                               target.matches('button[id="amazon-connect-close-widget-button"]') ||
-                               target.matches('button[class*="acCloseButton"]') ||
-                               (target.textContent && target.textContent.includes('Minimize')) ||
-                               target.closest('button[aria-label="Minimize Chat"]') ||
-                               target.closest('#amazon-connect-close-widget-button') ||
-                               target.closest('button[class*="acCloseButton"]')) &&
-                               !target.matches('button[class*="acCloseButtonStyles"]') &&  // Exclude close button styles
-                               !(target.textContent && target.textContent.trim() === 'Close');  // Exclude "Close" text
-
-      // Check if clicked element is the "Start Chat" button (reopening from minimized state)
-      const isStartChatButton = target.matches('#amazon-connect-open-widget-button') ||
-                                target.matches('button[id="amazon-connect-open-widget-button"]') ||
-                                target.matches('button[aria-label="Start Chat"]') ||
-                                target.closest('#amazon-connect-open-widget-button') ||
-                                target.closest('button[aria-label="Start Chat"]');
-
-      if (isCloseButton && this.state.active) {
-        console.log('🔍 Anthology: Close button clicked - returning to unified menu');
-        this.callbacks.closeListener();
-      } else if (isMinimizeButton && this.state.active) {
-        console.log('🔍 Anthology: Minimize button clicked - keeping session active, just minimizing');
-        // Don't call closeListener() - just let Amazon Connect handle the minimize
-        // The session stays active and the unified menu doesn't return
-      } else if (isStartChatButton && this.state.active) {
-        console.log('🔍 Anthology: Start Chat button clicked - reopening from minimized state, keeping session active');
-        // Don't call closeListener() - this is just reopening a minimized chat
-        // The session continues and the unified menu should not return
-      }
-    };
-
-    document.addEventListener('click', this.callbacks.documentClickListener, true);
-
-    // Also try direct attachment for existing buttons (as backup)
-    this.attachDirectListeners();
+    // Setup Amazon Connect widget state monitoring (for iframe-isolated close detection)
+    this.setupAmazonConnectStateMonitoring();
   }
 
   attachDirectListeners() {
@@ -324,6 +263,108 @@ export class AnthologyWidget extends BaseWidget {
     }
   }
 
+  setupAmazonConnectStateMonitoring() {
+    if (!this.state.active) return;
+
+    console.log('🔍 Anthology: Setting up Amazon Connect widget state monitoring');
+
+    // Monitor the Amazon Connect widget frame for class changes
+    const monitorWidgetFrame = () => {
+      const widgetFrame = document.getElementById('amazon-connect-widget-frame');
+
+      if (widgetFrame) {
+        const initialClass = widgetFrame.className;
+        const hasShowClass = initialClass.includes('show');
+
+        console.log('🔍 Anthology: Found Amazon Connect widget frame:', {
+          className: initialClass,
+          hasShowClass: hasShowClass
+        });
+
+        // Set up MutationObserver to watch for class changes on the widget frame
+        this.callbacks.widgetFrameObserver = new MutationObserver((mutations) => {
+          if (!this.state.active) return;
+
+          mutations.forEach(mutation => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              const currentClass = widgetFrame.className;
+              const currentlyHasShow = currentClass.includes('show');
+              const previouslyHadShow = mutation.oldValue?.includes('show') ?? false;
+
+              console.log('🔍 Anthology: Widget frame class changed:', {
+                oldClass: mutation.oldValue,
+                newClass: currentClass,
+                previouslyHadShow: previouslyHadShow,
+                currentlyHasShow: currentlyHasShow
+              });
+
+              // If the 'show' class was removed, the chat was closed/minimized
+              if (previouslyHadShow && !currentlyHasShow) {
+                console.log('🔍 Anthology: Amazon Connect chat closed/minimized - returning to unified menu');
+
+                // Add a small delay to ensure the state change is complete
+                setTimeout(() => {
+                  if (this.state.active) {
+                    this.callbacks.closeListener();
+                  }
+                }, 300);
+              }
+            }
+          });
+        });
+
+        // Start observing the widget frame for class attribute changes
+        this.callbacks.widgetFrameObserver.observe(widgetFrame, {
+          attributes: true,
+          attributeFilter: ['class'],
+          attributeOldValue: true
+        });
+
+        console.log('🔍 Anthology: Widget frame monitoring active');
+
+      } else {
+        // Widget frame not found yet, retry
+        if (this.state.active) {
+          console.log('🔍 Anthology: Amazon Connect widget frame not found yet, retrying...');
+          setTimeout(monitorWidgetFrame, 1000);
+        }
+      }
+    };
+
+    // Also monitor for complete widget removal
+    this.callbacks.widgetContainerObserver = new MutationObserver((mutations) => {
+      if (!this.state.active) return;
+
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+          for (let node of mutation.removedNodes) {
+            if (node.nodeType === 1 && (
+              node.id === 'amazon-connect-chat-widget' ||
+              node.id === 'amazon-connect-widget-frame' ||
+              node.querySelector('#amazon-connect-chat-widget') ||
+              node.querySelector('#amazon-connect-widget-frame')
+            )) {
+              console.log('🔍 Anthology: Amazon Connect widget removed from DOM');
+              if (this.state.active) {
+                this.callbacks.closeListener();
+              }
+              return;
+            }
+          }
+        }
+      });
+    });
+
+    // Watch the document for widget removal
+    this.callbacks.widgetContainerObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Start monitoring
+    monitorWidgetFrame();
+  }
+
   removeCloseListener() {
     if (!this.callbacks.closeListener) return;
 
@@ -363,6 +404,19 @@ export class AnthologyWidget extends BaseWidget {
         button.removeEventListener('click', this.callbacks.closeListener);
       }
     });
+
+    // Remove Amazon Connect state monitoring observers
+    if (this.callbacks.widgetFrameObserver) {
+      this.callbacks.widgetFrameObserver.disconnect();
+      this.callbacks.widgetFrameObserver = null;
+      console.log('🔍 Anthology: Widget frame observer disconnected');
+    }
+
+    if (this.callbacks.widgetContainerObserver) {
+      this.callbacks.widgetContainerObserver.disconnect();
+      this.callbacks.widgetContainerObserver = null;
+      console.log('🔍 Anthology: Widget container observer disconnected');
+    }
 
     this.callbacks.closeListener = null;
   }
