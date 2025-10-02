@@ -5,7 +5,8 @@ export class AnthologyWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'anthology',
-      displayName: 'Student Support Bot',
+      displayName: config.displayName || 'Live Chat Support',
+      order: config.order,
       scriptId: config.scriptId || 'demo-anthology-script',
       invokeSelector: '#amazon-connect-open-widget-button'
     });

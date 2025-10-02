@@ -470,7 +470,8 @@ class ZoomWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'zoom',
-      displayName: 'Zoom Contact Center',
+      displayName: config.displayName || 'Zoom Contact Center',
+      order: config.order,
       scriptId: 'zoom-cc-sdk',
       src: 'https://us01ccistatic.zoom.us/us01cci/web-sdk/zcc-sdk.js',
       attributes: {
@@ -551,7 +552,8 @@ class ChatbotWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'chatbot',
-      displayName: 'Live Chat Support',
+      displayName: config.displayName || 'Student Support Bot',
+      order: config.order,
       scriptId: config.scriptId || 'IS_CV_PUBLIC_HOOK',
       src: config.src || 'https://vccs-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js',
       attributes: {
@@ -660,7 +662,8 @@ class AnthologyWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'anthology',
-      displayName: 'Student Support Bot',
+      displayName: config.displayName || 'Live Chat Support',
+      order: config.order,
       scriptId: config.scriptId || 'demo-anthology-script',
       invokeSelector: '#amazon-connect-open-widget-button'
     });
@@ -1167,6 +1170,13 @@ async function initializeWidgets() {
       widgets.push(chatbotWidget);
       widgetRegistry.set(chatbotWidget.id, chatbotWidget);
     }
+
+    // Sort widgets by order property (if specified), otherwise maintain default order
+    widgets.sort((a, b) => {
+      const orderA = a.config?.order ?? 999;
+      const orderB = b.config?.order ?? 999;
+      return orderA - orderB;
+    });
 
     defaultErrorHandler.setWidgetRegistry(widgetRegistry);
 

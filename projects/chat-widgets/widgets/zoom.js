@@ -5,12 +5,13 @@ export class ZoomWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'zoom',
-      displayName: 'Zoom Contact Center',
+      displayName: config.displayName || 'Zoom Contact Center',
+      order: config.order,
       scriptId: 'zoom-cc-sdk',
       src: 'https://us01ccistatic.zoom.us/us01cci/web-sdk/zcc-sdk.js',
-      attributes: { 
-        'data-apikey': config.apiKey || 'DEMO_KEY', 
-        'data-env': config.env || 'us01' 
+      attributes: {
+        'data-apikey': config.apiKey || 'DEMO_KEY',
+        'data-env': config.env || 'us01'
       },
       invokeSelector: '.livesdk__invitation',
       closeSelector: '.css-1u2heh6',
