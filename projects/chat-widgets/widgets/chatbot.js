@@ -5,7 +5,8 @@ export class ChatbotWidget extends BaseWidget {
   constructor(config = {}) {
     super({
       id: 'chatbot',
-      displayName: 'Live Chat Support',
+      displayName: config.displayName || 'Student Support Bot',
+      order: config.order,
       scriptId: config.scriptId || 'IS_CV_PUBLIC_HOOK',
       src: config.src || 'https://vccs-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js',
       attributes: {

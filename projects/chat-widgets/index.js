@@ -68,6 +68,13 @@ async function initializeWidgets() {
       widgetRegistry.set(chatbotWidget.id, chatbotWidget);
     }
 
+    // Sort widgets by order property (if specified), otherwise maintain default order
+    widgets.sort((a, b) => {
+      const orderA = a.config?.order ?? 999;
+      const orderB = b.config?.order ?? 999;
+      return orderA - orderB;
+    });
+
     // Connect widget registry to error handler
     defaultErrorHandler.setWidgetRegistry(widgetRegistry);
 
