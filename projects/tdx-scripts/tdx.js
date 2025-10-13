@@ -140,6 +140,36 @@ function copyTableColumnToClipboard(table, columnIndex) {
     });
 }
 
+function tableSort(table, columnIndex){
+
+    function compareTableRows(rowA, rowB, columnIndex, isAscending) {
+        let cellA = rowA.cells[columnIndex].innerText;
+        let cellB = rowB.cells[columnIndex].innerText;
+
+        // Handle different data types (e.g., numbers vs. strings)
+        let valA = isNaN(parseFloat(cellA)) ? cellA : parseFloat(cellA);
+        let valB = isNaN(parseFloat(cellB)) ? cellB : parseFloat(cellB);
+
+        if (typeof valA === 'string' && typeof valB === 'string') {
+            return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+            return isAscending ? valA - valB : valB - valA;
+        }
+    }
+	
+	const rows = Array.from(table.rows).slice(1);
+	const isAscending = true;
+	
+	let sortedRows = rows.sort((a, b) => compareTableRows(a, b, columnIndex, isAscending));
+    let tbody = table.querySelector('tbody');
+    if (tbody) {
+        sortedRows.forEach(row => tbody.appendChild(row));
+    } else {
+        sortedRows.forEach(row => table.appendChild(row));
+    }
+}
+
+// adding sort function
 function addCopyToColumnHeadings(){
 	document.querySelectorAll('table th')
 		.forEach((item, i) => {
@@ -155,21 +185,28 @@ function addCopyToColumnHeadings(){
 			}
 		
 			// console.log(item,i);
-			item.insertAdjacentHTML('beforeend', "<i class=\"fa-solid fa-copy\" style=\"display:none;\"></i>");
+			item.insertAdjacentHTML('beforeend', "<span>&nbsp;</span><i class=\"fa-solid fa-copy\" style=\"display:none;\"></i>");
+			item.insertAdjacentHTML('beforeend', "<i class=\"fa-solid fa-sort\" style=\"display:none;\"></i>");
 
 			item.onmouseover = function(e){
 				// console.log('test');
 				item.querySelector(':scope i').style.display = 'inline-block';
-				item.title='Click to copy column';
+				item.querySelector(':scope i.fa-sort').style.display = 'inline-block';
+				item.querySelector(':scope i').title='Click to copy column';
+				item.querySelector(':scope i.fa-sort').title = 'Click to sort';
 				item.style.cursor = 'pointer';
 			};		
 			item.onmouseout = function(e){
 				// console.log('test2');
 				item.querySelector(':scope i').style.display = 'none';
+				item.querySelector(':scope i.fa-sort').style.display = 'none';
 				item.title='';
 			};
-			item.onclick = function(e){
+			item.querySelector('.fa-copy').onclick = function(e){
 				copyTableColumnToClipboard(tableElement, i);
+			}
+			item.querySelector('.fa-sort').onclick = function(e){
+				tableSort(tableElement, i);
 			}
 		}
 	);
