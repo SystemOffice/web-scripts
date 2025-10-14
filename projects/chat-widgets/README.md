@@ -11,19 +11,25 @@ A unified chat widget that integrates multiple chat services into a single embed
 ```html
 <script>
 window.CHAT_WIDGET_CONFIG = {
-  zoom: { 
-    enabled: true, 
-    apiKey: 'YOUR_ZOOM_API_KEY'
+  zoom: {
+    enabled: true,
+    apiKey: 'YOUR_ZOOM_SDK_KEY',  // Client-facing SDK key (domain-restricted)
+    displayName: 'Zoom Chat',      // Optional: Custom button label
+    order: 1                        // Optional: Menu display order
   },
-  anthology: { 
-    enabled: true, 
+  anthology: {
+    enabled: true,
     snippetId: 'YOUR_ANTHOLOGY_SNIPPET_ID',
     scriptId: 'YOUR_ANTHOLOGY_SCRIPT_ID',
-    institutionAlias: 'YOUR_ANTHOLOGY_INSTITUTION_ALIAS'
+    institutionAlias: 'YOUR_ANTHOLOGY_INSTITUTION_ALIAS',
+    displayName: 'Live Support', // Optional: Custom button label
+    order: 2                      // Optional: Menu display order
   },
-  chatbot: { 
-    enabled: true, 
-    org: 'YOUR_ORG_ID'
+  chatbot: {
+    enabled: true,
+    org: 'YOUR_ORG_ID',
+    displayName: 'AI Assistant',  // Optional: Custom button label
+    order: 3                       // Optional: Menu display order
   }
 };
 </script>
@@ -37,6 +43,8 @@ window.CHAT_WIDGET_CONFIG = {
 - **Multiple services**
 - **Domain-based config**
 - **Mobile responsive**
+- **Custom widget labels** - Rename buttons with `displayName`
+- **Configurable menu order** - Control widget display order
 
 ## Development
 
