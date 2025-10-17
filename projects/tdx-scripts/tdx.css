@@ -269,3 +269,34 @@ div:has(.htab){
 	}
 }
 
+/* chatbot */
+.oda-chat-wrapper.oda-chat-ida-light {
+	--color-branding: #31435d;
+	--color-branding: #00539b !important;
+	--color-header-text: #00539b !important;
+	--color-user-message-background: #31435d;
+	--color-user-message-background: #00539b !important;
+	--color-header-button-fill: #31435D;
+	--color-header-button-fill: #00539b !important;
+	--color-popup-text: #161513;
+	--color-popup-button-text: #161513;
+	--color-popup-text: #000000 !important;
+	--color-popup-button-text: #000000 !important;
+}
+
+body .oda-chat-wrapper .oda-chat-icon-wrapper, body .oda-chat-wrapper .oda-chat-icon-wrapper .oda-chat-message-icon {
+	height: 55px;
+	width: 55px;
+	filter: unset;
+	border-radius: 50%;
+}
+
+#isChatWelcomeText {
+	width: 175px;
+}
+
+@media (max-width: 479px) {
+	#isChatWelcomeBubble.welcomeBubbleShow {
+		width: 220px;
+	}
+}

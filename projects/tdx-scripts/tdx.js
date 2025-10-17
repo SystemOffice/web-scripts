@@ -40,8 +40,15 @@ addCss();
 
 function loadScriptAsync(src) {
           return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
+			var script;
+			if (typeof src !== "object"){
+				script = document.createElement('script');
+				script.src = src;
+			}
+			else {
+				script = src;
+			}
+			// console.log(script);
             script.async = true;
             script.onload = () => resolve();
             script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
@@ -406,6 +413,22 @@ function setupTabs(){
 }
 
 setupTabs();
+
+function addVCCSChat(){
+	if (document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1 ){
+	    const scriptObj = document.createElement('script');
+		scriptObj.dataset.org = "VCCS_SYS";
+		scriptObj.id = "IS_CV_PUBLIC_HOOK";
+		scriptObj.src = "https://vccs-dev-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js";
+		scriptObj.type="text/javascript";
+
+		loadScriptAsync(scriptObj)    
+			.then(() => console.log('script loaded successfully'))
+			.catch(error => console.error(error));
+    }
+}
+
+addVCCSChat();
 
 // add sandbox footer
 function appendHtml(el, str) {
