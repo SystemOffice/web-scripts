@@ -37,6 +37,11 @@
   transform: scale(1.06);
 }
 
+.chat-widget-btn:focus-visible {
+  outline: 3px solid #2575fc;
+  outline-offset: 2px;
+}
+
 .chat-widget-menu {
   display: block;
   position: absolute;

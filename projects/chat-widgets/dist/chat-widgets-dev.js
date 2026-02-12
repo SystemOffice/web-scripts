@@ -1,7 +1,7 @@
 (() => {
   // styles.css
   var style = document.createElement("style");
-  style.textContent = "#chat-widget-container {\n  font-family: 'Segoe UI', Arial, sans-serif;\n}\n\n.chat-widget-btn {\n  background: #31435d;\n  color: #fff;\n  border: none;\n  border-radius: 50%;\n  width: 80px;\n  height: 80px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 36px;\n  cursor: pointer;\n  box-shadow: 0 4px 24px rgba(80, 80, 180, 0.18), 0 1.5px 6px rgba(0,0,0,0.08);\n  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;\n  position: relative;\n  outline: none;\n  padding: 0;\n}\n\n.chat-widget-btn-modern .chat-widget-icon::before {\n  content: '\\1F4AC'; /* \u{1F4AC} */\n  font-size: 36px;\n  display: block;\n}\n\n.chat-widget-btn-modern .chat-widget-label {\n  display: none;\n}\n\n.chat-widget-btn:hover, .chat-widget-btn:focus {\n  background: #a20b34;\n  box-shadow: 0 8px 32px rgba(80, 80, 180, 0.22), 0 2px 8px rgba(0,0,0,0.10);\n  transform: scale(1.06);\n}\n\n.chat-widget-menu {\n  display: block;\n  position: absolute;\n  bottom: 80px;\n  right: 0;\n  background: #fff;\n  border-radius: 16px;\n  box-shadow: 0 4px 24px rgba(80, 80, 180, 0.12), 0 1.5px 6px rgba(0,0,0,0.08);\n  min-width: 240px;\n  padding: 12px 0;\n  z-index: 10000;\n  animation: fadeInMenu 0.18s;\n}\n\n@keyframes fadeInMenu {\n  from { opacity: 0; transform: translateY(16px); }\n  to { opacity: 1; transform: translateY(0); }\n}\n\n.chat-widget-menu-item {\n  display: block;\n  width: 100%;\n  background: none;\n  border: none;\n  text-align: left;\n  padding: 16px 32px;\n  font-size: 17px;\n  color: #333;\n  cursor: pointer;\n  transition: background 0.18s, color 0.18s;\n  border-radius: 0;\n}\n\n.chat-widget-menu-item-modern {\n  font-weight: 500;\n  letter-spacing: 0.01em;\n}\n\n.chat-widget-menu-item:hover, .chat-widget-menu-item:focus {\n  background: linear-gradient(90deg, #f3f3fd 0%, #eaf6ff 100%);\n  color: #2575fc;\n}\n\n/* Demo overlay for widget simulation */\n.chat-widget-demo-overlay {\n  position: fixed;\n  bottom: 100px;\n  right: 40px;\n  width: 340px;\n  height: 420px;\n  background: rgba(30, 34, 90, 0.12);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 10001;\n  border-radius: 18px;\n  box-shadow: 0 8px 32px rgba(80, 80, 180, 0.18);\n}\n\n.chat-widget-demo-box {\n  background: #fff;\n  border-radius: 14px;\n  box-shadow: 0 2px 8px rgba(0,0,0,0.10);\n  padding: 32px 24px 24px 24px;\n  text-align: center;\n  width: 90%;\n  max-width: 300px;\n  font-size: 18px;\n  color: #333;\n  position: relative;\n}\n\n.chat-widget-demo-box.zoom { border-top: 4px solid #2575fc; }\n.chat-widget-demo-box.anthology { border-top: 4px solid #830065; }\n.chat-widget-demo-box.chatbot { border-top: 4px solid #1e90ff; }\n\n.chat-widget-demo-close {\n  margin-top: 24px;\n  background: #2575fc;\n  color: #fff;\n  border: none;\n  border-radius: 8px;\n  padding: 10px 24px;\n  font-size: 16px;\n  cursor: pointer;\n  transition: background 0.18s;\n}\n\n.chat-widget-demo-close:hover {\n  background: #6a11cb;\n} ";
+  style.textContent = "#chat-widget-container {\n  font-family: 'Segoe UI', Arial, sans-serif;\n}\n\n.chat-widget-btn {\n  background: #31435d;\n  color: #fff;\n  border: none;\n  border-radius: 50%;\n  width: 80px;\n  height: 80px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 36px;\n  cursor: pointer;\n  box-shadow: 0 4px 24px rgba(80, 80, 180, 0.18), 0 1.5px 6px rgba(0,0,0,0.08);\n  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;\n  position: relative;\n  outline: none;\n  padding: 0;\n}\n\n.chat-widget-btn-modern .chat-widget-icon::before {\n  content: '\\1F4AC'; /* \u{1F4AC} */\n  font-size: 36px;\n  display: block;\n}\n\n.chat-widget-btn-modern .chat-widget-label {\n  display: none;\n}\n\n.chat-widget-btn:hover, .chat-widget-btn:focus {\n  background: #a20b34;\n  box-shadow: 0 8px 32px rgba(80, 80, 180, 0.22), 0 2px 8px rgba(0,0,0,0.10);\n  transform: scale(1.06);\n}\n\n.chat-widget-btn:focus-visible {\n  outline: 3px solid #2575fc;\n  outline-offset: 2px;\n}\n\n.chat-widget-menu {\n  display: block;\n  position: absolute;\n  bottom: 80px;\n  right: 0;\n  background: #fff;\n  border-radius: 16px;\n  box-shadow: 0 4px 24px rgba(80, 80, 180, 0.12), 0 1.5px 6px rgba(0,0,0,0.08);\n  min-width: 240px;\n  padding: 12px 0;\n  z-index: 10000;\n  animation: fadeInMenu 0.18s;\n}\n\n@keyframes fadeInMenu {\n  from { opacity: 0; transform: translateY(16px); }\n  to { opacity: 1; transform: translateY(0); }\n}\n\n.chat-widget-menu-item {\n  display: block;\n  width: 100%;\n  background: none;\n  border: none;\n  text-align: left;\n  padding: 16px 32px;\n  font-size: 17px;\n  color: #333;\n  cursor: pointer;\n  transition: background 0.18s, color 0.18s;\n  border-radius: 0;\n}\n\n.chat-widget-menu-item-modern {\n  font-weight: 500;\n  letter-spacing: 0.01em;\n}\n\n.chat-widget-menu-item:hover, .chat-widget-menu-item:focus {\n  background: linear-gradient(90deg, #f3f3fd 0%, #eaf6ff 100%);\n  color: #2575fc;\n}\n\n/* Demo overlay for widget simulation */\n.chat-widget-demo-overlay {\n  position: fixed;\n  bottom: 100px;\n  right: 40px;\n  width: 340px;\n  height: 420px;\n  background: rgba(30, 34, 90, 0.12);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 10001;\n  border-radius: 18px;\n  box-shadow: 0 8px 32px rgba(80, 80, 180, 0.18);\n}\n\n.chat-widget-demo-box {\n  background: #fff;\n  border-radius: 14px;\n  box-shadow: 0 2px 8px rgba(0,0,0,0.10);\n  padding: 32px 24px 24px 24px;\n  text-align: center;\n  width: 90%;\n  max-width: 300px;\n  font-size: 18px;\n  color: #333;\n  position: relative;\n}\n\n.chat-widget-demo-box.zoom { border-top: 4px solid #2575fc; }\n.chat-widget-demo-box.anthology { border-top: 4px solid #830065; }\n.chat-widget-demo-box.chatbot { border-top: 4px solid #1e90ff; }\n\n.chat-widget-demo-close {\n  margin-top: 24px;\n  background: #2575fc;\n  color: #fff;\n  border: none;\n  border-radius: 8px;\n  padding: 10px 24px;\n  font-size: 16px;\n  cursor: pointer;\n  transition: background 0.18s;\n}\n\n.chat-widget-demo-close:hover {\n  background: #6a11cb;\n} ";
   document.head.appendChild(style);
 
   // state.js
@@ -1246,43 +1246,122 @@
       unifiedButtonContainer.style.display = visible ? "flex" : "none";
     }
   }
+  function isMenuOpen() {
+    return menu.style.display === "block";
+  }
+  function openMenu() {
+    menu.style.display = "block";
+    unifiedButton.setAttribute("aria-expanded", "true");
+    const firstItem = menu.querySelector('[role="menuitem"]');
+    if (firstItem) firstItem.focus();
+  }
+  function closeMenu() {
+    menu.style.display = "none";
+    unifiedButton.setAttribute("aria-expanded", "false");
+  }
+  function toggleMenu() {
+    if (isMenuOpen()) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+  function handleButtonKeydown(event) {
+    if (["ArrowDown", "Enter", " "].includes(event.key)) {
+      event.preventDefault();
+      openMenu();
+      return;
+    }
+    if (event.key === "Escape" && isMenuOpen()) {
+      event.preventDefault();
+      closeMenu();
+      unifiedButton.focus();
+    }
+  }
+  function handleMenuKeydown(event) {
+    const items = [...menu.querySelectorAll('[role="menuitem"]')];
+    const index = items.indexOf(document.activeElement);
+    const keyActions = {
+      "Escape": () => {
+        closeMenu();
+        unifiedButton.focus();
+      },
+      "Home": () => items[0]?.focus(),
+      "End": () => items[items.length - 1]?.focus(),
+      "ArrowDown": () => items[(index + 1) % items.length]?.focus(),
+      "ArrowUp": () => items[(index - 1 + items.length) % items.length]?.focus()
+    };
+    const action = keyActions[event.key];
+    if (!action) return;
+    event.preventDefault();
+    action();
+  }
+  function setupOutsideClickHandler() {
+    document.addEventListener("click", (event) => {
+      if (!isMenuOpen()) return;
+      if (unifiedButtonContainer.contains(event.target)) return;
+      closeMenu();
+    });
+  }
+  function createContainer(uiConfig) {
+    const container = document.createElement("div");
+    container.id = "chat-widget-container";
+    container.style.position = "fixed";
+    container.style.bottom = uiConfig.bottom;
+    container.style.right = uiConfig.right;
+    container.style.zIndex = uiConfig.zIndex;
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "flex-end";
+    return container;
+  }
+  function createMainButton() {
+    const button = document.createElement("button");
+    button.id = "chat-widget-main-btn";
+    button.innerHTML = '<span class="chat-widget-icon"></span><span class="chat-widget-label">Chat</span>';
+    button.className = "chat-widget-btn chat-widget-btn-modern";
+    button.setAttribute("aria-label", "Open chat options menu");
+    button.setAttribute("aria-haspopup", "true");
+    button.setAttribute("aria-expanded", "false");
+    button.addEventListener("click", toggleMenu);
+    button.addEventListener("keydown", handleButtonKeydown);
+    return button;
+  }
+  function createMenuItem(widget, state) {
+    const item = document.createElement("button");
+    item.innerText = widget.displayName;
+    item.className = "chat-widget-menu-item chat-widget-menu-item-modern";
+    item.setAttribute("role", "menuitem");
+    item.setAttribute("tabindex", "-1");
+    item.onclick = () => {
+      closeMenu();
+      setUnifiedButtonVisibility(false);
+      state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
+    };
+    return item;
+  }
+  function createMenuElement(state) {
+    const menuElement = document.createElement("div");
+    menuElement.id = "chat-widget-menu";
+    menuElement.style.display = "none";
+    menuElement.className = "chat-widget-menu chat-widget-menu-modern";
+    menuElement.setAttribute("role", "menu");
+    menuElement.setAttribute("aria-label", "Chat options");
+    widgets.forEach((widget) => {
+      menuElement.appendChild(createMenuItem(widget, state));
+    });
+    menuElement.addEventListener("keydown", handleMenuKeydown);
+    return menuElement;
+  }
   function createUnifiedButton(state) {
     const uiConfig = defaultConfig.get("ui.position");
-    unifiedButtonContainer = document.createElement("div");
-    unifiedButtonContainer.id = "chat-widget-container";
-    unifiedButtonContainer.style.position = "fixed";
-    unifiedButtonContainer.style.bottom = uiConfig.bottom;
-    unifiedButtonContainer.style.right = uiConfig.right;
-    unifiedButtonContainer.style.zIndex = uiConfig.zIndex;
-    unifiedButtonContainer.style.display = "flex";
-    unifiedButtonContainer.style.flexDirection = "column";
-    unifiedButtonContainer.style.alignItems = "flex-end";
-    unifiedButton = document.createElement("button");
-    unifiedButton.id = "chat-widget-main-btn";
-    unifiedButton.innerHTML = '<span class="chat-widget-icon"></span><span class="chat-widget-label">Chat</span>';
-    unifiedButton.className = "chat-widget-btn chat-widget-btn-modern";
-    unifiedButton.setAttribute("aria-label", "Open chat options menu");
-    unifiedButton.onclick = () => {
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
-    };
-    menu = document.createElement("div");
-    menu.id = "chat-widget-menu";
-    menu.style.display = "none";
-    menu.className = "chat-widget-menu chat-widget-menu-modern";
-    widgets.forEach((widget) => {
-      const item = document.createElement("button");
-      item.innerText = widget.displayName;
-      item.className = "chat-widget-menu-item chat-widget-menu-item-modern";
-      item.onclick = () => {
-        setUnifiedButtonVisibility(false);
-        state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
-        menu.style.display = "none";
-      };
-      menu.appendChild(item);
-    });
+    unifiedButtonContainer = createContainer(uiConfig);
+    unifiedButton = createMainButton();
+    menu = createMenuElement(state);
     unifiedButtonContainer.appendChild(unifiedButton);
     unifiedButtonContainer.appendChild(menu);
     document.body.appendChild(unifiedButtonContainer);
+    setupOutsideClickHandler();
   }
   window.addEventListener("DOMContentLoaded", initializeWidgets);
 })();
