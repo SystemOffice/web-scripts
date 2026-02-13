@@ -21,7 +21,7 @@ export class WidgetConfig {
     // Retry mechanism configuration
     retry: {
       invokeRetryDelay: 200,
-      invokeMaxRetries: 50,
+      invokeMaxRetries: 20,
       exponentialBackoffBase: 1.2,
       maxRetryDelay: 2000
     },

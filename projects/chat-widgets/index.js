@@ -7,32 +7,12 @@ import { ChatbotWidget } from './widgets/chatbot.js';
 import { defaultConfig } from './config.js';
 import { defaultErrorHandler } from './error-handler.js';
 import { defaultLogger } from './logger.js';
+import { mountAllWidgets } from './mount-widgets.js';
+import { loadClientConfig } from './fetch-config.js';
 
-// Domain-based configuration loading
-async function loadClientConfig() {
-  const domain = window.location.hostname;
-  
-  // Check for client-provided config first
-  if (window.CHAT_WIDGET_CONFIG) {
-    return window.CHAT_WIDGET_CONFIG;
-  }
-  
-  // Fallback: try to load from config service
-  try {
-    const response = await fetch(`https://your-config-service.com/config/${domain}`);
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch (error) {
-    console.warn('Could not load client config, using defaults');
-  }
-  
-  // Default config (for demo/testing)
-  return {
-    zoom: { enabled: false },
-    anthology: { enabled: false },
-    chatbot: { enabled: false }
-  };
+function getClientConfig() {
+  const configService = defaultConfig.get('configService');
+  return loadClientConfig(window, configService.baseUrl, configService.timeout);
 }
 
 // Initialize widgets with client config
@@ -45,7 +25,7 @@ let menu = null;
 async function initializeWidgets() {
   try {
     defaultLogger.info('Initializing chat widget system');
-    const config = await loadClientConfig();
+    const config = await getClientConfig();
 
     widgets = [];
     widgetRegistry.clear();
@@ -85,14 +65,7 @@ async function initializeWidgets() {
 
     defaultLogger.info(`Initialized ${widgets.length} widgets: ${widgets.map(w => w.id).join(', ')}`);
 
-    // Mount all widgets
-    for (const widget of widgets) {
-      try {
-        await widget.mount();
-      } catch (error) {
-        defaultLogger.error(`Failed to mount widget ${widget.id}`, { error: error.message });
-      }
-    }
+    await mountAllWidgets(widgets, defaultLogger);
 
     const state = new ChatWidgetState(widgets);
     createUnifiedButton(state);
@@ -212,7 +185,7 @@ function createMenuItem(widget, state) {
   item.innerText = widget.displayName;
   item.className = 'chat-widget-menu-item chat-widget-menu-item-modern';
   item.setAttribute('role', 'menuitem');
-  item.setAttribute('tabindex', '-1');
+  item.setAttribute('tabindex', '0');
   item.onclick = () => {
     closeMenu();
     setUnifiedButtonVisibility(false);

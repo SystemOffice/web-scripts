@@ -54,7 +54,7 @@
       // Retry mechanism configuration
       retry: {
         invokeRetryDelay: 200,
-        invokeMaxRetries: 50,
+        invokeMaxRetries: 20,
         exponentialBackoffBase: 1.2,
         maxRetryDelay: 2e3
       },
@@ -331,6 +331,27 @@
     }
   };
   var defaultLogger = new WidgetLogger();
+
+  // poll-until.js
+  function pollUntil(predicate, { interval = 50, maxWait = 5e3 } = {}) {
+    return new Promise((resolve, reject) => {
+      const result = predicate();
+      if (result) return resolve(result);
+      const startTime = Date.now();
+      const timer = setInterval(() => {
+        const current = predicate();
+        if (current) {
+          clearInterval(timer);
+          resolve(current);
+          return;
+        }
+        if (Date.now() - startTime >= maxWait) {
+          clearInterval(timer);
+          reject(new Error(`pollUntil timed out after ${maxWait}ms`));
+        }
+      }, interval);
+    });
+  }
 
   // widgets/base-widget.js
   var BaseWidget = class {
@@ -615,25 +636,31 @@
         this.state.active = true;
         this.callbacks.onDeactivate = onDeactivate;
         const timingConfig = this.widgetConfig.getTimingConfig(this.id);
-        const delay = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
-        setTimeout(async () => {
-          if (this.state.active) {
-            try {
-              await this.invokeWidget();
-              this.toggleVisibility(true);
-              this.attachCloseListener();
-              this.firstActivation = false;
-              await this.executeHooks("onActivate", "after");
-              const duration = activationTimer.stop();
-              this.logger.logWidgetActivation(this.id, duration);
-            } catch (error) {
-              activationTimer.stop();
-              await this.errorHandler.handleWidgetError(error, "widget_init", this.id);
-            }
-          } else {
+        const maxWait = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
+        try {
+          await pollUntil(
+            () => document.querySelector(this.config.invokeSelector),
+            { interval: 50, maxWait }
+          );
+        } catch {
+          this.logger.debug("Invoke selector not found within timeout, proceeding with retry", {}, this.id);
+        }
+        if (this.state.active) {
+          try {
+            await this.invokeWidget();
+            this.toggleVisibility(true);
+            this.attachCloseListener();
+            this.firstActivation = false;
+            await this.executeHooks("onActivate", "after");
+            const duration = activationTimer.stop();
+            this.logger.logWidgetActivation(this.id, duration);
+          } catch (error) {
             activationTimer.stop();
+            await this.errorHandler.handleWidgetError(error, "widget_init", this.id);
           }
-        }, delay);
+        } else {
+          activationTimer.stop();
+        }
       } catch (error) {
         activationTimer.stop();
         this.logger.error(`Widget activation failed`, { error: error.message }, this.id);
@@ -684,9 +711,7 @@
         closeSelector: ".css-1u2heh6",
         elementSelectors: ['[class*="livesdk"]', '[class*="zcc"]', '[id*="zcc"]', '[class*="zoom"]', 'button[aria-label="Leave"]'],
         invokeRetryDelay: 150,
-        // Shorter delay since button appears quickly
-        invokeMaxRetries: 40
-        // Fewer retries (6 seconds total)
+        invokeMaxRetries: 20
       });
       if (!config.apiKey || config.apiKey === "DEMO_KEY") {
         console.warn("Zoom: API key not configured. Please add your Zoom API key to the configuration.");
@@ -878,31 +903,28 @@
         });
       });
     }
-    activate(onDeactivate) {
+    async activate(onDeactivate) {
       console.log("\u{1F50D} Anthology: Activating widget", { scriptLoaded: this.scriptLoaded });
       this.state.active = true;
       this.callbacks.onDeactivate = onDeactivate;
       if (!this.scriptLoaded) {
         console.log("\u{1F50D} Anthology: Loading script for first time");
         this.loadScriptOnce();
-        setTimeout(() => {
-          if (this.state.active) {
-            console.log("\u{1F50D} Anthology: First activation - invoking widget");
-            this.invokeWidget();
-            this.toggleVisibility(true);
-            this.attachCloseListener();
-          }
-        }, 3e3);
-      } else {
-        console.log("\u{1F50D} Anthology: Script already loaded, quick activation");
-        setTimeout(() => {
-          if (this.state.active) {
-            console.log("\u{1F50D} Anthology: Subsequent activation - invoking widget");
-            this.invokeWidget();
-            this.toggleVisibility(true);
-            this.attachCloseListener();
-          }
-        }, 100);
+      }
+      const maxWait = this.scriptLoaded ? 500 : 5e3;
+      try {
+        await pollUntil(
+          () => document.querySelector(this.config.invokeSelector),
+          { interval: 50, maxWait }
+        );
+      } catch {
+        console.log("\u{1F50D} Anthology: Invoke selector not found within timeout, proceeding with retry");
+      }
+      if (this.state.active) {
+        console.log("\u{1F50D} Anthology: Invoking widget");
+        this.invokeWidget();
+        this.toggleVisibility(true);
+        this.attachCloseListener();
       }
     }
     attachCloseListener() {
@@ -1109,30 +1131,28 @@
       if (!config.org || config.org === "DEMO_ORG") {
         console.warn("Chatbot: Organization not configured. Please add your organization ID to the configuration.");
       }
-      this.injectScript();
-      this.hideElementsAggressively();
     }
-    hideElementsAggressively() {
-      const hideAttempts = [500, 1e3, 1500, 2e3, 2500, 3e3];
-      hideAttempts.forEach((delay) => {
-        setTimeout(() => {
-          if (!this.state.active) {
-            this.toggleVisibility(false);
-          }
-        }, delay);
-      });
-    }
-    activate(onDeactivate) {
+    async activate(onDeactivate) {
       this.state.active = true;
       this.callbacks.onDeactivate = onDeactivate;
-      setTimeout(() => {
-        if (this.state.active) {
-          this.invokeWidget();
-          this.toggleVisibility(true);
-          this.attachCloseListener();
-          this.firstActivation = false;
-        }
-      }, 100);
+      if (!this.state.initialized) {
+        await this.injectScript();
+      }
+      const maxWait = this.firstActivation ? 5e3 : 2e3;
+      try {
+        await pollUntil(
+          () => document.querySelector(this.config.invokeSelector),
+          { interval: 50, maxWait }
+        );
+      } catch {
+        console.log("\u{1F50D} Chatbot: Invoke selector not found within timeout, proceeding with retry");
+      }
+      if (this.state.active) {
+        this.invokeWidget();
+        this.toggleVisibility(true);
+        this.attachCloseListener();
+        this.firstActivation = false;
+      }
     }
     getElementsToToggle() {
       const launcherButton = document.getElementById(this.config.launcherId);
@@ -1170,25 +1190,52 @@
     }
   };
 
-  // index.js
-  async function loadClientConfig() {
-    const domain = window.location.hostname;
-    if (window.CHAT_WIDGET_CONFIG) {
-      return window.CHAT_WIDGET_CONFIG;
-    }
+  // mount-widgets.js
+  async function mountAllWidgets(widgets2, logger) {
+    await Promise.all(widgets2.map(
+      (widget) => widget.mount().catch((error) => {
+        logger.error(`Failed to mount widget ${widget.id}`, { error: error.message });
+      })
+    ));
+  }
+
+  // fetch-config.js
+  var DEFAULT_CONFIG = {
+    zoom: { enabled: false },
+    anthology: { enabled: false },
+    chatbot: { enabled: false }
+  };
+  async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(`https://your-config-service.com/config/${domain}`);
+      const response = await fetch(url, { signal: controller.signal });
       if (response.ok) {
         return await response.json();
       }
+    } finally {
+      clearTimeout(timer);
+    }
+    return null;
+  }
+  async function loadClientConfig(windowRef, configServiceUrl, timeoutMs) {
+    if (windowRef.CHAT_WIDGET_CONFIG) {
+      return windowRef.CHAT_WIDGET_CONFIG;
+    }
+    try {
+      const domain = windowRef.location.hostname;
+      const config = await fetchWithTimeout(`${configServiceUrl}/config/${domain}`, timeoutMs);
+      if (config) return config;
     } catch (error) {
       console.warn("Could not load client config, using defaults");
     }
-    return {
-      zoom: { enabled: false },
-      anthology: { enabled: false },
-      chatbot: { enabled: false }
-    };
+    return DEFAULT_CONFIG;
+  }
+
+  // index.js
+  function getClientConfig() {
+    const configService = defaultConfig.get("configService");
+    return loadClientConfig(window, configService.baseUrl, configService.timeout);
   }
   var widgets = [];
   var widgetRegistry = /* @__PURE__ */ new Map();
@@ -1198,7 +1245,7 @@
   async function initializeWidgets() {
     try {
       defaultLogger.info("Initializing chat widget system");
-      const config = await loadClientConfig();
+      const config = await getClientConfig();
       widgets = [];
       widgetRegistry.clear();
       if (config.zoom?.enabled) {
@@ -1227,13 +1274,7 @@
         return;
       }
       defaultLogger.info(`Initialized ${widgets.length} widgets: ${widgets.map((w) => w.id).join(", ")}`);
-      for (const widget of widgets) {
-        try {
-          await widget.mount();
-        } catch (error) {
-          defaultLogger.error(`Failed to mount widget ${widget.id}`, { error: error.message });
-        }
-      }
+      await mountAllWidgets(widgets, defaultLogger);
       const state = new ChatWidgetState(widgets);
       createUnifiedButton(state);
     } catch (error) {
@@ -1332,7 +1373,7 @@
     item.innerText = widget.displayName;
     item.className = "chat-widget-menu-item chat-widget-menu-item-modern";
     item.setAttribute("role", "menuitem");
-    item.setAttribute("tabindex", "-1");
+    item.setAttribute("tabindex", "0");
     item.onclick = () => {
       closeMenu();
       setUnifiedButtonVisibility(false);

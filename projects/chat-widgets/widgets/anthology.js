@@ -1,5 +1,6 @@
 // Anthology (Amazon Connect) widget integration
 import { BaseWidget } from './base-widget.js';
+import { pollUntil } from '../poll-until.js';
 
 export class AnthologyWidget extends BaseWidget {
   constructor(config = {}) {
@@ -145,7 +146,7 @@ export class AnthologyWidget extends BaseWidget {
     });
   }
 
-  activate(onDeactivate) {
+  async activate(onDeactivate) {
     console.log('🔍 Anthology: Activating widget', { scriptLoaded: this.scriptLoaded });
     this.state.active = true;
     this.callbacks.onDeactivate = onDeactivate;
@@ -153,26 +154,24 @@ export class AnthologyWidget extends BaseWidget {
     if (!this.scriptLoaded) {
       console.log('🔍 Anthology: Loading script for first time');
       this.loadScriptOnce();
-      // Wait longer for first load
-      setTimeout(() => {
-        if (this.state.active) {
-          console.log('🔍 Anthology: First activation - invoking widget');
-          this.invokeWidget();
-          this.toggleVisibility(true);
-          this.attachCloseListener();
-        }
-      }, 3000);
-    } else {
-      console.log('🔍 Anthology: Script already loaded, quick activation');
-      // Subsequent activations
-      setTimeout(() => {
-        if (this.state.active) {
-          console.log('🔍 Anthology: Subsequent activation - invoking widget');
-          this.invokeWidget();
-          this.toggleVisibility(true);
-          this.attachCloseListener();
-        }
-      }, 100);
+    }
+
+    const maxWait = this.scriptLoaded ? 500 : 5000;
+
+    try {
+      await pollUntil(
+        () => document.querySelector(this.config.invokeSelector),
+        { interval: 50, maxWait }
+      );
+    } catch {
+      console.log('🔍 Anthology: Invoke selector not found within timeout, proceeding with retry');
+    }
+
+    if (this.state.active) {
+      console.log('🔍 Anthology: Invoking widget');
+      this.invokeWidget();
+      this.toggleVisibility(true);
+      this.attachCloseListener();
     }
   }
 
