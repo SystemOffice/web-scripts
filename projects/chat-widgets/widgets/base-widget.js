@@ -392,6 +392,7 @@ export class BaseWidget {
 
       if (this.state.active) {
         try {
+          this.invokeRetryCount = 0;
           await this.invokeWidget();
           this.toggleVisibility(true);
           this.attachCloseListener();
