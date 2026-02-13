@@ -2,6 +2,7 @@
 import { defaultConfig } from '../config.js';
 import { defaultErrorHandler } from '../error-handler.js';
 import { defaultLogger } from '../logger.js';
+import { pollUntil } from '../poll-until.js';
 
 export class BaseWidget {
   constructor(config) {
@@ -374,37 +375,38 @@ export class BaseWidget {
       this.state.active = true;
       this.callbacks.onDeactivate = onDeactivate;
 
-      // Dynamic timing delays using configuration
+      // Poll for invoke selector instead of fixed delay
       const timingConfig = this.widgetConfig.getTimingConfig(this.id);
-      const delay = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
+      const maxWait = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
 
-      setTimeout(async () => {
-        if (this.state.active) {
-          try {
-            // 1. First INVOKE the widget (click launch button)
-            await this.invokeWidget();
+      try {
+        await pollUntil(
+          () => document.querySelector(this.config.invokeSelector),
+          { interval: 50, maxWait }
+        );
+      } catch {
+        this.logger.debug('Invoke selector not found within timeout, proceeding with retry', {}, this.id);
+      }
 
-            // 2. Then manage the chat window visibility
-            this.toggleVisibility(true);
-            this.attachCloseListener();
+      if (this.state.active) {
+        try {
+          await this.invokeWidget();
+          this.toggleVisibility(true);
+          this.attachCloseListener();
+          this.firstActivation = false;
 
-            // Mark first activation as complete
-            this.firstActivation = false;
+          await this.executeHooks('onActivate', 'after');
 
-            // Execute post-activation hooks
-            await this.executeHooks('onActivate', 'after');
+          const duration = activationTimer.stop();
+          this.logger.logWidgetActivation(this.id, duration);
 
-            const duration = activationTimer.stop();
-            this.logger.logWidgetActivation(this.id, duration);
-
-          } catch (error) {
-            activationTimer.stop();
-            await this.errorHandler.handleWidgetError(error, 'widget_init', this.id);
-          }
-        } else {
+        } catch (error) {
           activationTimer.stop();
+          await this.errorHandler.handleWidgetError(error, 'widget_init', this.id);
         }
-      }, delay);
+      } else {
+        activationTimer.stop();
+      }
 
     } catch (error) {
       activationTimer.stop();

@@ -16,8 +16,8 @@ export class ZoomWidget extends BaseWidget {
       invokeSelector: '.livesdk__invitation',
       closeSelector: '.css-1u2heh6',
       elementSelectors: ['[class*="livesdk"]', '[class*="zcc"]', '[id*="zcc"]', '[class*="zoom"]', 'button[aria-label="Leave"]'],
-      invokeRetryDelay: 150, // Shorter delay since button appears quickly
-      invokeMaxRetries: 40   // Fewer retries (6 seconds total)
+      invokeRetryDelay: 150,
+      invokeMaxRetries: 20
     });
     
     // Validate required config

@@ -1,5 +1,6 @@
 // Chatbot widget integration
 import { BaseWidget } from './base-widget.js';
+import { pollUntil } from '../poll-until.js';
 
 export class ChatbotWidget extends BaseWidget {
   constructor(config = {}) {
@@ -23,37 +24,34 @@ export class ChatbotWidget extends BaseWidget {
     if (!config.org || config.org === 'DEMO_ORG') {
       console.warn('Chatbot: Organization not configured. Please add your organization ID to the configuration.');
     }
-
-    // Load script immediately but hide elements aggressively
-    this.injectScript();
-    this.hideElementsAggressively();
   }
 
-  hideElementsAggressively() {
-    // Hide elements multiple times as they appear
-    const hideAttempts = [500, 1000, 1500, 2000, 2500, 3000];
-    hideAttempts.forEach(delay => {
-      setTimeout(() => {
-        if (!this.state.active) {
-          this.toggleVisibility(false);
-        }
-      }, delay);
-    });
-  }
-
-  activate(onDeactivate) {
-    // Script is already loaded, just activate quickly
+  async activate(onDeactivate) {
     this.state.active = true;
     this.callbacks.onDeactivate = onDeactivate;
 
-    setTimeout(() => {
-      if (this.state.active) {
-        this.invokeWidget();
-        this.toggleVisibility(true);
-        this.attachCloseListener();
-        this.firstActivation = false;
-      }
-    }, 100); // Fast since script is pre-loaded
+    // Inject script on first activation (deferred from construction)
+    if (!this.state.initialized) {
+      await this.injectScript();
+    }
+
+    const maxWait = this.firstActivation ? 5000 : 2000;
+
+    try {
+      await pollUntil(
+        () => document.querySelector(this.config.invokeSelector),
+        { interval: 50, maxWait }
+      );
+    } catch {
+      console.log('🔍 Chatbot: Invoke selector not found within timeout, proceeding with retry');
+    }
+
+    if (this.state.active) {
+      this.invokeWidget();
+      this.toggleVisibility(true);
+      this.attachCloseListener();
+      this.firstActivation = false;
+    }
   }
 
   getElementsToToggle() {

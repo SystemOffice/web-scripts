@@ -29,7 +29,7 @@ test('test_constructor_backoffBaseLessThanOne_throwsError', () => {
 // WidgetConfig.get tests
 test('test_get_validDotNotationPath_returnsValue', () => {
   const config = new WidgetConfig();
-  expect(config.get('retry.invokeMaxRetries')).toBe(50);
+  expect(config.get('retry.invokeMaxRetries')).toBe(20);
 });
 
 test('test_get_unknownPath_returnsUndefined', () => {
@@ -74,5 +74,5 @@ test('test_getTimingConfig_unknownWidgetId_returnsGlobalTiming', () => {
 test('test_getRetryConfig_noWidgetId_returnsGlobalRetry', () => {
   const config = new WidgetConfig();
   const retryConfig = config.getRetryConfig();
-  expect(retryConfig.invokeMaxRetries).toBe(50);
+  expect(retryConfig.invokeMaxRetries).toBe(20);
 });
