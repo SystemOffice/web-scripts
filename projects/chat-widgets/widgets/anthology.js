@@ -167,6 +167,10 @@ export class AnthologyWidget extends BaseWidget {
       console.log('🔍 Anthology: Invoke selector not found within timeout, proceeding with retry');
     }
 
+    // Let Amazon Connect SDK stabilize before invoking and monitoring
+    const stabilizationDelay = this.scriptLoaded ? 500 : 2000;
+    await new Promise(r => setTimeout(r, stabilizationDelay));
+
     if (this.state.active) {
       console.log('🔍 Anthology: Invoking widget');
       this.invokeWidget();

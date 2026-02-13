@@ -375,7 +375,7 @@ export class BaseWidget {
       this.state.active = true;
       this.callbacks.onDeactivate = onDeactivate;
 
-      // Poll for invoke selector instead of fixed delay
+      // Poll for invoke selector, then wait for SDK to attach event handlers
       const timingConfig = this.widgetConfig.getTimingConfig(this.id);
       const maxWait = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
 
@@ -387,6 +387,8 @@ export class BaseWidget {
       } catch {
         this.logger.debug('Invoke selector not found within timeout, proceeding with retry', {}, this.id);
       }
+
+      await new Promise(r => setTimeout(r, timingConfig.stabilizationDelay));
 
       if (this.state.active) {
         try {
