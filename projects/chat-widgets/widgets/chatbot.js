@@ -47,6 +47,7 @@ export class ChatbotWidget extends BaseWidget {
     }
 
     if (this.state.active) {
+      this.invokeRetryCount = 0;
       this.invokeWidget();
       this.toggleVisibility(true);
       this.attachCloseListener();

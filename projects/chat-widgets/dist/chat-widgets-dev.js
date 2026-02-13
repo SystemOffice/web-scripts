@@ -649,6 +649,7 @@
         await new Promise((r) => setTimeout(r, timingConfig.stabilizationDelay));
         if (this.state.active) {
           try {
+            this.invokeRetryCount = 0;
             await this.invokeWidget();
             this.toggleVisibility(true);
             this.attachCloseListener();
@@ -876,10 +877,6 @@
             }
           });
           config.initialized = true;
-          setTimeout(() => {
-            const elements = config.getElementsToToggle();
-            elements.forEach((el) => el.style.display = "none");
-          }, 2e3);
         }
       })(window, document, "amazon_connect", this.scriptId, this, this.originalConfig);
     }
@@ -925,6 +922,7 @@
       const stabilizationDelay = this.scriptLoaded ? 500 : 2e3;
       await new Promise((r) => setTimeout(r, stabilizationDelay));
       if (this.state.active) {
+        this.invokeRetryCount = 0;
         console.log("\u{1F50D} Anthology: Invoking widget");
         this.invokeWidget();
         this.toggleVisibility(true);
@@ -1152,6 +1150,7 @@
         console.log("\u{1F50D} Chatbot: Invoke selector not found within timeout, proceeding with retry");
       }
       if (this.state.active) {
+        this.invokeRetryCount = 0;
         this.invokeWidget();
         this.toggleVisibility(true);
         this.attachCloseListener();

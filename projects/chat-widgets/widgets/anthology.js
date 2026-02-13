@@ -108,11 +108,7 @@ export class AnthologyWidget extends BaseWidget {
 
         config.initialized = true;
 
-        // Start hidden by default - we'll show it when activated
-        setTimeout(() => {
-          const elements = config.getElementsToToggle();
-          elements.forEach(el => el.style.display = 'none');
-        }, 2000);
+        // Visibility is controlled by activate() — no initial hide needed
       }
     })(window, document, 'amazon_connect', this.scriptId, this, this.originalConfig);
   }
@@ -172,6 +168,7 @@ export class AnthologyWidget extends BaseWidget {
     await new Promise(r => setTimeout(r, stabilizationDelay));
 
     if (this.state.active) {
+      this.invokeRetryCount = 0;
       console.log('🔍 Anthology: Invoking widget');
       this.invokeWidget();
       this.toggleVisibility(true);
