@@ -48,6 +48,7 @@
       timing: {
         firstActivationDelay: 1500,
         subsequentActivationDelay: 300,
+        stabilizationDelay: 500,
         deactivationDelay: 300,
         closeListenerRetryDelay: 500
       },
@@ -645,6 +646,7 @@
         } catch {
           this.logger.debug("Invoke selector not found within timeout, proceeding with retry", {}, this.id);
         }
+        await new Promise((r) => setTimeout(r, timingConfig.stabilizationDelay));
         if (this.state.active) {
           try {
             await this.invokeWidget();
@@ -920,6 +922,8 @@
       } catch {
         console.log("\u{1F50D} Anthology: Invoke selector not found within timeout, proceeding with retry");
       }
+      const stabilizationDelay = this.scriptLoaded ? 500 : 2e3;
+      await new Promise((r) => setTimeout(r, stabilizationDelay));
       if (this.state.active) {
         console.log("\u{1F50D} Anthology: Invoking widget");
         this.invokeWidget();

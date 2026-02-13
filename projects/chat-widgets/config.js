@@ -14,6 +14,7 @@ export class WidgetConfig {
     timing: {
       firstActivationDelay: 1500,
       subsequentActivationDelay: 300,
+      stabilizationDelay: 500,
       deactivationDelay: 300,
       closeListenerRetryDelay: 500
     },
