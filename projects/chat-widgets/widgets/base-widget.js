@@ -288,26 +288,13 @@ export class BaseWidget {
 
   toggleVisibility(show) {
     const elements = this.getElementsToToggle();
-    
+
     elements.forEach(el => {
-      // For launch buttons, use visibility instead of display to keep them queryable
-      const isLaunchButton = el.id === this.config.launcherId || 
-                           (this.config.invokeSelector && el.matches(this.config.invokeSelector));
-      
-      if (isLaunchButton) {
-        // Keep launch buttons in DOM but hidden
-        Object.assign(el.style, {
-          visibility: show ? 'visible' : 'hidden',
-          opacity: show ? '1' : '0'
-        });
-      } else {
-        // For other elements, use display none to completely hide them
-        Object.assign(el.style, {
-          display: show ? '' : 'none',
-          visibility: show ? 'visible' : 'hidden',
-          opacity: show ? '1' : '0'
-        });
-      }
+      Object.assign(el.style, {
+        display: show ? '' : 'none',
+        visibility: show ? 'visible' : 'hidden',
+        opacity: show ? '1' : '0'
+      });
     });
   }
 
@@ -440,11 +427,9 @@ export class BaseWidget {
       const duration = deactivationTimer.stop();
       this.logger.logWidgetDeactivation(this.id, duration);
 
-      const deactivationDelay = this.widgetConfig.get('timing.deactivationDelay');
-
-      // Call the callback before nullifying the reference
+      // Call the callback synchronously — visibility is already toggled
       if (callback) {
-        setTimeout(callback, deactivationDelay);
+        callback();
       }
 
       // Clear callback reference after calling it

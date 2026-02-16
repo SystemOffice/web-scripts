@@ -92,9 +92,11 @@ export class ChatbotWidget extends BaseWidget {
 
       const isCloseOrMinimizeButton = target.matches('.oda-chat-popup-action.oda-chat-filled.oda-chat-flex') ||
                                       target.matches('#oda-chat-collapse') ||
+                                      target.matches('#oda-chat-end-conversation') ||
                                       target.matches('li[data-value="collapse"]') ||
                                       target.closest('.oda-chat-popup-action.oda-chat-filled.oda-chat-flex') ||
                                       target.closest('#oda-chat-collapse') ||
+                                      target.closest('#oda-chat-end-conversation') ||
                                       target.closest('li[data-value="collapse"]') ||
                                       (target.textContent && target.textContent.includes('Minimize conversation'));
 

@@ -577,19 +577,11 @@
     toggleVisibility(show) {
       const elements = this.getElementsToToggle();
       elements.forEach((el) => {
-        const isLaunchButton = el.id === this.config.launcherId || this.config.invokeSelector && el.matches(this.config.invokeSelector);
-        if (isLaunchButton) {
-          Object.assign(el.style, {
-            visibility: show ? "visible" : "hidden",
-            opacity: show ? "1" : "0"
-          });
-        } else {
-          Object.assign(el.style, {
-            display: show ? "" : "none",
-            visibility: show ? "visible" : "hidden",
-            opacity: show ? "1" : "0"
-          });
-        }
+        Object.assign(el.style, {
+          display: show ? "" : "none",
+          visibility: show ? "visible" : "hidden",
+          opacity: show ? "1" : "0"
+        });
       });
     }
     getElementsToToggle() {
@@ -687,9 +679,8 @@
         await this.executeHooks("onDeactivate", "after");
         const duration = deactivationTimer.stop();
         this.logger.logWidgetDeactivation(this.id, duration);
-        const deactivationDelay = this.widgetConfig.get("timing.deactivationDelay");
         if (callback) {
-          setTimeout(callback, deactivationDelay);
+          callback();
         }
         this.callbacks.onDeactivate = null;
       } catch (error) {
@@ -1186,7 +1177,7 @@
       };
       this.callbacks.documentClickListener = (event) => {
         const target = event.target;
-        const isCloseOrMinimizeButton = target.matches(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.matches("#oda-chat-collapse") || target.matches('li[data-value="collapse"]') || target.closest(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.closest("#oda-chat-collapse") || target.closest('li[data-value="collapse"]') || target.textContent && target.textContent.includes("Minimize conversation");
+        const isCloseOrMinimizeButton = target.matches(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.matches("#oda-chat-collapse") || target.matches("#oda-chat-end-conversation") || target.matches('li[data-value="collapse"]') || target.closest(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.closest("#oda-chat-collapse") || target.closest("#oda-chat-end-conversation") || target.closest('li[data-value="collapse"]') || target.textContent && target.textContent.includes("Minimize conversation");
         if (isCloseOrMinimizeButton && this.state.active) {
           console.log("\u{1F50D} Chatbot: Close or minimize button clicked - returning to unified menu");
           this.callbacks.closeListener();
