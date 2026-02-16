@@ -7,6 +7,11 @@ const TIMEOUT_SUBSEQUENT = 8000;
 const TIMEOUT_MENU_RETURN = 5000;
 const POLL_INTERVAL = 100;
 
+// Menu labels as they appear on the test page
+const LABEL_ZOOM = 'Zoom Contact Center';
+const LABEL_ANTHOLOGY = 'Live Chat Support';
+const LABEL_CHATBOT = 'AI Chatbot';
+
 const results = [];
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -56,32 +61,20 @@ async function waitForUnifiedButton(page, timeout = TIMEOUT_MENU_RETURN) {
   );
 }
 
-async function forceResetToMenu(page) {
-  await page.evaluate(() => {
-    const container = document.getElementById('chat-widget-container');
-    if (container) container.style.display = 'flex';
-
-    const menu = document.getElementById('chat-widget-menu');
-    if (menu) menu.style.display = 'none';
-
-    document.querySelectorAll('[class*="livesdk"]').forEach(el => {
-      el.style.display = 'none';
-    });
-
-    const frame = document.getElementById('amazon-connect-widget-frame');
-    if (frame) frame.classList.remove('show');
-
-    document.querySelectorAll('[class*="oda-chat"]').forEach(el => {
-      el.style.display = 'none';
-    });
-  });
-
-  await new Promise(r => setTimeout(r, 1000));
+async function freshPage(page) {
+  await page.reload({ waitUntil: 'networkidle2', timeout: 60000 });
+  await page.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
+  await new Promise(r => setTimeout(r, 500));
 }
 
 async function clickMenuWidget(page, label) {
-  await page.click('#chat-widget-main-btn');
-  await page.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+  try {
+    await page.click('#chat-widget-main-btn');
+    await page.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+  } catch {
+    console.log(`    [warn] menu did not open for "${label}"`);
+    return false;
+  }
 
   const clicked = await page.evaluate((targetLabel) => {
     const items = [...document.querySelectorAll('[role="menuitem"]')];
@@ -89,6 +82,10 @@ async function clickMenuWidget(page, label) {
     if (match) { match.click(); return true; }
     return false;
   }, label);
+
+  if (!clicked) {
+    console.log(`    [warn] menu item "${label}" not found`);
+  }
 
   return clicked;
 }
@@ -109,6 +106,8 @@ async function getWidgetVisibility(page) {
   });
 }
 
+// ─── Widget-specific wait/close ─────────────────────────────────────
+
 async function waitForZoom(page, timeout) {
   return poll(
     page,
@@ -118,6 +117,34 @@ async function waitForZoom(page, timeout) {
     },
     timeout,
   );
+}
+
+async function closeZoom(page) {
+  // Click the invitation to open the Zoom pre-join dialog
+  await page.evaluate(() => {
+    document.querySelector('.livesdk__invitation')?.click();
+  });
+
+  // Wait for the Leave button to appear
+  const leaveAppeared = await poll(
+    page,
+    () => {
+      const button = document.querySelector('button[aria-label="Leave"]')
+        || document.querySelector('.css-1u2heh6');
+      return !!button;
+    },
+    10000,
+  );
+
+  if (!leaveAppeared) return false;
+
+  await page.evaluate(() => {
+    const button = document.querySelector('button[aria-label="Leave"]')
+      || document.querySelector('.css-1u2heh6');
+    button?.click();
+  });
+
+  return waitForUnifiedButton(page);
 }
 
 async function waitForAnthology(page, timeout) {
@@ -131,6 +158,22 @@ async function waitForAnthology(page, timeout) {
   );
 }
 
+async function closeAnthology(page) {
+  const closeAppeared = await poll(
+    page,
+    () => !!document.getElementById('amazon-connect-close-widget-button'),
+    5000,
+  );
+
+  if (!closeAppeared) return false;
+
+  await page.evaluate(() => {
+    document.getElementById('amazon-connect-close-widget-button')?.click();
+  });
+
+  return waitForUnifiedButton(page);
+}
+
 async function waitForChatbot(page, timeout) {
   return poll(
     page,
@@ -142,49 +185,20 @@ async function waitForChatbot(page, timeout) {
   );
 }
 
-async function closeZoom(page) {
-  const closed = await page.evaluate(() => {
-    const leaveButton = document.querySelector('button[aria-label="Leave"]')
-      || document.querySelector('.css-1u2heh6');
-    if (leaveButton) { leaveButton.click(); return true; }
-    return false;
-  });
-
-  if (closed) {
-    await waitForUnifiedButton(page);
-  }
-
-  return closed;
-}
-
-async function closeAnthology(page) {
-  const closed = await page.evaluate(() => {
-    const closeButton = document.querySelector('button[aria-label="Close chat"]');
-    if (closeButton) { closeButton.click(); return true; }
-    return false;
-  });
-
-  if (closed) {
-    await waitForUnifiedButton(page);
-  }
-
-  return closed;
-}
-
 async function closeChatbot(page) {
-  const closed = await page.evaluate(() => {
-    const closeButton = document.querySelector(
-      '.oda-chat-popup-action.oda-chat-filled.oda-chat-flex'
-    );
-    if (closeButton) { closeButton.click(); return true; }
-    return false;
+  const closeAppeared = await poll(
+    page,
+    () => !!document.getElementById('oda-chat-end-conversation'),
+    5000,
+  );
+
+  if (!closeAppeared) return false;
+
+  await page.evaluate(() => {
+    document.getElementById('oda-chat-end-conversation')?.click();
   });
 
-  if (closed) {
-    await waitForUnifiedButton(page);
-  }
-
-  return closed;
+  return waitForUnifiedButton(page);
 }
 
 function printSummary() {
@@ -205,6 +219,27 @@ function printSummary() {
   console.log('='.repeat(60));
 }
 
+// ─── Widget config ──────────────────────────────────────────────────
+
+const WIDGETS = {
+  Zoom:      { label: LABEL_ZOOM,      wait: waitForZoom,      close: closeZoom },
+  Anthology: { label: LABEL_ANTHOLOGY, wait: waitForAnthology, close: closeAnthology },
+  Chatbot:   { label: LABEL_CHATBOT,   wait: waitForChatbot,   close: closeChatbot },
+};
+
+async function activateWidget(page, widgetName, timeout) {
+  const widget = WIDGETS[widgetName];
+  const clicked = await clickMenuWidget(page, widget.label);
+  if (!clicked) return false;
+  return widget.wait(page, timeout);
+}
+
+async function activateAndClose(page, widgetName, timeout) {
+  const appeared = await activateWidget(page, widgetName, timeout);
+  if (!appeared) return false;
+  return WIDGETS[widgetName].close(page);
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -212,203 +247,105 @@ const page = await browser.newPage();
 const consoleLogs = collectConsoleLogs(page);
 
 console.log('Loading page...');
-await page.goto(URL, { waitUntil: 'networkidle2', timeout: 30000 });
+await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
 await page.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
 console.log('Chat widget button found.\n');
 
-// ─── Test 1: Zoom activate ─────────────────────────────────────────
+// ─── Tests 1–3: Individual widget activation ───────────────────────
 
-console.log('Test 1: Zoom — activate and verify');
-await forceResetToMenu(page);
-await clickMenuWidget(page, 'Zoom');
-const zoomAppeared = await waitForZoom(page, TIMEOUT_FIRST_ACTIVATION);
-logResult('Zoom: activate and verify', zoomAppeared);
+const activationTests = [
+  { num: 1, name: 'Zoom: activate and verify',      widget: 'Zoom' },
+  { num: 2, name: 'Anthology: activate and verify',  widget: 'Anthology' },
+  { num: 3, name: 'Chatbot: activate and verify',    widget: 'Chatbot' },
+];
 
-// ─── Test 2: Zoom close returns to menu ────────────────────────────
-
-console.log('Test 2: Zoom — close returns to menu');
-if (zoomAppeared) {
-  const zoomClosed = await closeZoom(page);
-  const menuReturned = zoomClosed && await waitForUnifiedButton(page);
-  logResult('Zoom: close returns to menu', menuReturned,
-    zoomClosed ? '' : 'close button not found');
-} else {
-  logResult('Zoom: close returns to menu', false, 'skipped — zoom did not activate');
+for (const test of activationTests) {
+  console.log(`Test ${test.num}: ${test.name}`);
+  await freshPage(page);
+  const appeared = await activateWidget(page, test.widget, TIMEOUT_FIRST_ACTIVATION);
+  logResult(test.name, appeared);
 }
 
-// ─── Test 3: Anthology activate ────────────────────────────────────
+// ─── Tests 4–6: Close returns to menu (real close buttons) ─────────
 
-console.log('Test 3: Anthology — activate and verify');
-await forceResetToMenu(page);
-await clickMenuWidget(page, 'Live Chat');
-const anthologyAppeared = await waitForAnthology(page, TIMEOUT_FIRST_ACTIVATION);
-logResult('Anthology: activate and verify', anthologyAppeared);
+const closeTests = [
+  { num: 4, name: 'Zoom: close returns to menu',      widget: 'Zoom' },
+  { num: 5, name: 'Anthology: close returns to menu',  widget: 'Anthology' },
+  { num: 6, name: 'Chatbot: close returns to menu',    widget: 'Chatbot' },
+];
 
-// ─── Test 4: Anthology close returns to menu ───────────────────────
+for (const test of closeTests) {
+  console.log(`Test ${test.num}: ${test.name}`);
+  await freshPage(page);
 
-console.log('Test 4: Anthology — close returns to menu');
-if (anthologyAppeared) {
-  const anthologyClosed = await closeAnthology(page);
-  const menuReturned = anthologyClosed && await waitForUnifiedButton(page);
-  logResult('Anthology: close returns to menu', menuReturned,
-    anthologyClosed ? '' : 'close button not found');
-} else {
-  logResult('Anthology: close returns to menu', false, 'skipped — anthology did not activate');
+  const closed = await activateAndClose(page, test.widget, TIMEOUT_FIRST_ACTIVATION);
+  logResult(test.name, closed, closed ? '' : `${test.widget} activate or close failed`);
 }
 
-// ─── Test 5: Chatbot activate ──────────────────────────────────────
-
-console.log('Test 5: Chatbot — activate and verify');
-await forceResetToMenu(page);
-await clickMenuWidget(page, 'Bot');
-const chatbotAppeared = await waitForChatbot(page, TIMEOUT_FIRST_ACTIVATION);
-
-if (!chatbotAppeared) {
-  // Try alternate label
-  await forceResetToMenu(page);
-  await clickMenuWidget(page, 'Student Support Bot');
-  const retryAppeared = await waitForChatbot(page, TIMEOUT_FIRST_ACTIVATION);
-  logResult('Chatbot: activate and verify', retryAppeared,
-    retryAppeared ? 'matched via "Student Support Bot"' : '');
-} else {
-  logResult('Chatbot: activate and verify', true);
-}
-
-// ─── Test 6: Chatbot close returns to menu ─────────────────────────
-
-console.log('Test 6: Chatbot — close returns to menu');
-const chatbotVisible = await page.evaluate(() => {
-  const el = document.querySelector('[class*="oda-chat"]');
-  return el && getComputedStyle(el).display !== 'none';
-});
-
-if (chatbotVisible) {
-  const chatbotClosed = await closeChatbot(page);
-  const menuReturned = chatbotClosed && await waitForUnifiedButton(page);
-  logResult('Chatbot: close returns to menu', menuReturned,
-    chatbotClosed ? '' : 'close button not found');
-} else {
-  logResult('Chatbot: close returns to menu', false, 'skipped — chatbot did not activate');
-}
-
-// Determine the working chatbot label for subsequent tests
-const chatbotLabel = await (async () => {
-  await forceResetToMenu(page);
-  await clickMenuWidget(page, 'Bot');
-  const found = await waitForChatbot(page, TIMEOUT_SUBSEQUENT);
-  await forceResetToMenu(page);
-  return found ? 'Bot' : 'Student Support Bot';
-})();
-
-// ─── Switching tests helper ────────────────────────────────────────
-
-async function activateAndClose(page, widgetName) {
-  const config = {
-    'Zoom':      { label: 'Zoom',      wait: waitForZoom,      close: closeZoom },
-    'Anthology': { label: 'Live Chat',  wait: waitForAnthology, close: closeAnthology },
-    'Chatbot':   { label: chatbotLabel, wait: waitForChatbot,   close: closeChatbot },
-  };
-
-  const widget = config[widgetName];
-  await clickMenuWidget(page, widget.label);
-  const appeared = await widget.wait(page, TIMEOUT_SUBSEQUENT);
-  if (!appeared) return false;
-
-  const closed = await widget.close(page);
-  if (!closed) return false;
-
-  return waitForUnifiedButton(page);
-}
-
-async function activateWidget(page, widgetName) {
-  const config = {
-    'Zoom':      { label: 'Zoom',      wait: waitForZoom },
-    'Anthology': { label: 'Live Chat',  wait: waitForAnthology },
-    'Chatbot':   { label: chatbotLabel, wait: waitForChatbot },
-  };
-
-  const widget = config[widgetName];
-  await clickMenuWidget(page, widget.label);
-  return widget.wait(page, TIMEOUT_SUBSEQUENT);
-}
-
-// ─── Tests 7–12: Close-then-switch patterns ────────────────────────
+// ─── Tests 7–12: Widget switching (close first, then activate second) ──
 
 const switchTests = [
-  { num: 7,  first: 'Zoom',      second: 'Chatbot',   checker: waitForChatbot },
-  { num: 8,  first: 'Zoom',      second: 'Anthology',  checker: waitForAnthology },
-  { num: 9,  first: 'Chatbot',   second: 'Zoom',       checker: waitForZoom },
-  { num: 10, first: 'Chatbot',   second: 'Anthology',  checker: waitForAnthology },
-  { num: 11, first: 'Anthology', second: 'Zoom',       checker: waitForZoom },
-  { num: 12, first: 'Anthology', second: 'Chatbot',    checker: waitForChatbot },
+  { num: 7,  first: 'Zoom',      second: 'Chatbot' },
+  { num: 8,  first: 'Zoom',      second: 'Anthology' },
+  { num: 9,  first: 'Chatbot',   second: 'Zoom' },
+  { num: 10, first: 'Chatbot',   second: 'Anthology' },
+  { num: 11, first: 'Anthology', second: 'Zoom' },
+  { num: 12, first: 'Anthology', second: 'Chatbot' },
 ];
 
 for (const test of switchTests) {
   const name = `${test.first} -> close -> ${test.second}`;
   console.log(`Test ${test.num}: ${name}`);
-  await forceResetToMenu(page);
+  await freshPage(page);
 
-  const closedOk = await activateAndClose(page, test.first);
+  const closedFirst = await activateAndClose(page, test.first, TIMEOUT_FIRST_ACTIVATION);
 
-  if (!closedOk) {
+  if (!closedFirst) {
     logResult(name, false, `${test.first} activate/close failed`);
     continue;
   }
 
-  const secondLabel = test.second === 'Zoom' ? 'Zoom'
-    : test.second === 'Anthology' ? 'Live Chat'
-    : chatbotLabel;
-
-  await clickMenuWidget(page, secondLabel);
-  const secondAppeared = await test.checker(page, TIMEOUT_SUBSEQUENT);
-
+  const secondAppeared = await activateWidget(page, test.second, TIMEOUT_SUBSEQUENT);
   const visibility = await getWidgetVisibility(page);
   const details = secondAppeared ? '' : `visibility: ${JSON.stringify(visibility)}`;
   logResult(name, secondAppeared, details);
 }
 
-// ─── Tests 13–14: Rapid switch (no close) ──────────────────────────
+// ─── Tests 13–15: Back-to-back switching ────────────────────────────
 
-console.log('Test 13: Rapid switch — Zoom -> Chatbot (no close)');
-await forceResetToMenu(page);
-await activateWidget(page, 'Zoom');
-await forceResetToMenu(page);
-await activateWidget(page, 'Chatbot');
-
-const rapid13 = await getWidgetVisibility(page);
+console.log('Test 13: Back-to-back — Zoom -> Chatbot -> Zoom');
+await freshPage(page);
+let ok13 = await activateAndClose(page, 'Zoom', TIMEOUT_FIRST_ACTIVATION);
+ok13 = ok13 && await activateAndClose(page, 'Chatbot', TIMEOUT_SUBSEQUENT);
+ok13 = ok13 && await activateWidget(page, 'Zoom', TIMEOUT_SUBSEQUENT);
+const vis13 = await getWidgetVisibility(page);
 logResult(
-  'Rapid switch: Zoom -> Chatbot (no close)',
-  rapid13.chatbotVisible && !rapid13.zoomVisible,
-  `zoom=${rapid13.zoomVisible} chatbot=${rapid13.chatbotVisible} menu=${rapid13.unifiedButton}`,
+  'Back-to-back: Zoom -> Chatbot -> Zoom',
+  ok13 && vis13.zoomVisible,
+  `zoom=${vis13.zoomVisible} chatbot=${vis13.chatbotVisible} menu=${vis13.unifiedButton}`,
 );
 
-console.log('Test 14: Rapid switch — Chatbot -> Anthology (no close)');
-await forceResetToMenu(page);
-await activateWidget(page, 'Chatbot');
-await forceResetToMenu(page);
-await activateWidget(page, 'Anthology');
-
-const rapid14 = await getWidgetVisibility(page);
+console.log('Test 14: Back-to-back — Chatbot -> Anthology -> Chatbot');
+await freshPage(page);
+let ok14 = await activateAndClose(page, 'Chatbot', TIMEOUT_FIRST_ACTIVATION);
+ok14 = ok14 && await activateAndClose(page, 'Anthology', TIMEOUT_SUBSEQUENT);
+ok14 = ok14 && await activateWidget(page, 'Chatbot', TIMEOUT_SUBSEQUENT);
+const vis14 = await getWidgetVisibility(page);
 logResult(
-  'Rapid switch: Chatbot -> Anthology (no close)',
-  rapid14.anthologyVisible && !rapid14.chatbotVisible,
-  `chatbot=${rapid14.chatbotVisible} anthology=${rapid14.anthologyVisible} menu=${rapid14.unifiedButton}`,
+  'Back-to-back: Chatbot -> Anthology -> Chatbot',
+  ok14 && vis14.chatbotVisible,
+  `chatbot=${vis14.chatbotVisible} anthology=${vis14.anthologyVisible} menu=${vis14.unifiedButton}`,
 );
-
-// ─── Test 15: Triple switch ────────────────────────────────────────
 
 console.log('Test 15: Triple switch — Zoom -> Anthology -> Chatbot');
-await forceResetToMenu(page);
-await activateWidget(page, 'Zoom');
-await forceResetToMenu(page);
-await activateWidget(page, 'Anthology');
-await forceResetToMenu(page);
-await activateWidget(page, 'Chatbot');
-
+await freshPage(page);
+let ok15 = await activateAndClose(page, 'Zoom', TIMEOUT_FIRST_ACTIVATION);
+ok15 = ok15 && await activateAndClose(page, 'Anthology', TIMEOUT_SUBSEQUENT);
+ok15 = ok15 && await activateWidget(page, 'Chatbot', TIMEOUT_SUBSEQUENT);
 const triple = await getWidgetVisibility(page);
 logResult(
   'Triple switch: Zoom -> Anthology -> Chatbot',
-  triple.chatbotVisible && !triple.zoomVisible && !triple.anthologyVisible,
+  ok15 && triple.chatbotVisible && !triple.zoomVisible && !triple.anthologyVisible,
   `zoom=${triple.zoomVisible} anthology=${triple.anthologyVisible} chatbot=${triple.chatbotVisible}`,
 );
 
