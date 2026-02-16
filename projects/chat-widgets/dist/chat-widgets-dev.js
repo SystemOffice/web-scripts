@@ -10,19 +10,22 @@
       this.widgets = widgets2;
       this.activeWidgetId = null;
       this.onDeactivateCallback = null;
+      this.activationCounter = 0;
     }
     activateWidget(widgetId, onDeactivate) {
+      const activationToken = ++this.activationCounter;
       this.onDeactivateCallback = onDeactivate;
       this.widgets.forEach((widget) => {
         if (widget.id === widgetId) {
           widget.activate(() => {
+            if (this.activationCounter !== activationToken) return;
             this.activeWidgetId = null;
             if (typeof this.onDeactivateCallback === "function") {
               this.onDeactivateCallback();
             }
           });
           this.activeWidgetId = widgetId;
-        } else {
+        } else if (widget.state.active) {
           widget.deactivate();
         }
       });
@@ -659,7 +662,9 @@
             this.logger.logWidgetActivation(this.id, duration);
           } catch (error) {
             activationTimer.stop();
+            this.logger.error(`Widget activation failed`, { error: error.message }, this.id);
             await this.errorHandler.handleWidgetError(error, "widget_init", this.id);
+            this.deactivate(this.callbacks.onDeactivate);
           }
         } else {
           activationTimer.stop();
@@ -668,6 +673,7 @@
         activationTimer.stop();
         this.logger.error(`Widget activation failed`, { error: error.message }, this.id);
         await this.errorHandler.handleWidgetError(error, "widget_init", this.id);
+        this.deactivate(this.callbacks.onDeactivate);
       }
     }
     async deactivate(callback) {
@@ -1137,24 +1143,29 @@
     async activate(onDeactivate) {
       this.state.active = true;
       this.callbacks.onDeactivate = onDeactivate;
-      if (!this.state.initialized) {
-        await this.injectScript();
-      }
-      const maxWait = this.firstActivation ? 5e3 : 2e3;
       try {
-        await pollUntil(
-          () => document.querySelector(this.config.invokeSelector),
-          { interval: 50, maxWait }
-        );
-      } catch {
-        console.log("\u{1F50D} Chatbot: Invoke selector not found within timeout, proceeding with retry");
-      }
-      if (this.state.active) {
-        this.invokeRetryCount = 0;
-        this.invokeWidget();
-        this.toggleVisibility(true);
-        this.attachCloseListener();
-        this.firstActivation = false;
+        if (!this.state.initialized) {
+          await this.injectScript();
+        }
+        const maxWait = this.firstActivation ? 5e3 : 2e3;
+        try {
+          await pollUntil(
+            () => document.querySelector(this.config.invokeSelector),
+            { interval: 50, maxWait }
+          );
+        } catch {
+          console.log("\u{1F50D} Chatbot: Invoke selector not found within timeout, proceeding with retry");
+        }
+        if (this.state.active) {
+          this.invokeRetryCount = 0;
+          this.invokeWidget();
+          this.toggleVisibility(true);
+          this.attachCloseListener();
+          this.firstActivation = false;
+        }
+      } catch (error) {
+        console.warn(`Chatbot: Activation failed \u2014 ${error.message}`);
+        this.deactivate(this.callbacks.onDeactivate);
       }
     }
     getElementsToToggle() {

@@ -30,28 +30,33 @@ export class ChatbotWidget extends BaseWidget {
     this.state.active = true;
     this.callbacks.onDeactivate = onDeactivate;
 
-    // Inject script on first activation (deferred from construction)
-    if (!this.state.initialized) {
-      await this.injectScript();
-    }
-
-    const maxWait = this.firstActivation ? 5000 : 2000;
-
     try {
-      await pollUntil(
-        () => document.querySelector(this.config.invokeSelector),
-        { interval: 50, maxWait }
-      );
-    } catch {
-      console.log('🔍 Chatbot: Invoke selector not found within timeout, proceeding with retry');
-    }
+      // Inject script on first activation (deferred from construction)
+      if (!this.state.initialized) {
+        await this.injectScript();
+      }
 
-    if (this.state.active) {
-      this.invokeRetryCount = 0;
-      this.invokeWidget();
-      this.toggleVisibility(true);
-      this.attachCloseListener();
-      this.firstActivation = false;
+      const maxWait = this.firstActivation ? 5000 : 2000;
+
+      try {
+        await pollUntil(
+          () => document.querySelector(this.config.invokeSelector),
+          { interval: 50, maxWait }
+        );
+      } catch {
+        console.log('🔍 Chatbot: Invoke selector not found within timeout, proceeding with retry');
+      }
+
+      if (this.state.active) {
+        this.invokeRetryCount = 0;
+        this.invokeWidget();
+        this.toggleVisibility(true);
+        this.attachCloseListener();
+        this.firstActivation = false;
+      }
+    } catch (error) {
+      console.warn(`Chatbot: Activation failed — ${error.message}`);
+      this.deactivate(this.callbacks.onDeactivate);
     }
   }
 
