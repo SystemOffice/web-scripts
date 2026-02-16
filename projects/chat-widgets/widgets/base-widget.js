@@ -405,7 +405,9 @@ export class BaseWidget {
 
         } catch (error) {
           activationTimer.stop();
+          this.logger.error(`Widget activation failed`, { error: error.message }, this.id);
           await this.errorHandler.handleWidgetError(error, 'widget_init', this.id);
+          this.deactivate(this.callbacks.onDeactivate);
         }
       } else {
         activationTimer.stop();
@@ -415,6 +417,7 @@ export class BaseWidget {
       activationTimer.stop();
       this.logger.error(`Widget activation failed`, { error: error.message }, this.id);
       await this.errorHandler.handleWidgetError(error, 'widget_init', this.id);
+      this.deactivate(this.callbacks.onDeactivate);
     }
   }
 
