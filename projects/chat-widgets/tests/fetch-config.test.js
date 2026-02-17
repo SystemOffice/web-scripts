@@ -56,7 +56,8 @@ test('test_loadClientConfig_fetchFails_returnsDefaults', async () => {
   expect(result).toEqual({
     zoom: { enabled: false },
     anthology: { enabled: false },
-    chatbot: { enabled: false }
+    chatbot: { enabled: false },
+    links: []
   });
 });
 
@@ -69,7 +70,8 @@ test('test_loadClientConfig_fetchNotOk_returnsDefaults', async () => {
   expect(result).toEqual({
     zoom: { enabled: false },
     anthology: { enabled: false },
-    chatbot: { enabled: false }
+    chatbot: { enabled: false },
+    links: []
   });
 });
 
