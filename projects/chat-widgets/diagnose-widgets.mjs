@@ -136,7 +136,18 @@ async function closeZoom(page) {
     10000,
   );
 
-  if (!leaveAppeared) return false;
+  if (!leaveAppeared) {
+    const invState = await page.evaluate(() => {
+      const inv = document.querySelector('.livesdk__invitation');
+      return inv ? {
+        display: getComputedStyle(inv).display,
+        style: inv.style.cssText,
+        visible: getComputedStyle(inv).visibility,
+      } : 'missing';
+    });
+    console.log('    [debug] Leave button did not appear. Invitation state:', JSON.stringify(invState));
+    return false;
+  }
 
   await page.evaluate(() => {
     const button = document.querySelector('button[aria-label="Leave"]')
@@ -144,7 +155,17 @@ async function closeZoom(page) {
     button?.click();
   });
 
-  return waitForUnifiedButton(page);
+  // Allow Zoom SDK time to tear down its UI after Leave
+  await new Promise(r => setTimeout(r, 1000));
+
+  const menuBack = await waitForUnifiedButton(page);
+
+  if (!menuBack) {
+    const vis = await getWidgetVisibility(page);
+    console.log('    [debug] Unified button did not return after Leave:', JSON.stringify(vis));
+  }
+
+  return menuBack;
 }
 
 async function waitForAnthology(page, timeout) {
@@ -186,33 +207,37 @@ async function waitForChatbot(page, timeout) {
 }
 
 async function closeChatbot(page) {
-  // Open the options menu first
-  const optionsAppeared = await poll(
+  // Click the end conversation button (X) to trigger the Yes/No prompt
+  const endBtnAppeared = await poll(
     page,
-    () => !!document.querySelector('.oda-chat-button-show-options'),
+    () => !!document.getElementById('oda-chat-end-conversation'),
     5000,
   );
 
-  if (!optionsAppeared) return false;
+  if (!endBtnAppeared) return false;
 
   await page.evaluate(() => {
-    document.querySelector('.oda-chat-button-show-options')?.click();
+    document.getElementById('oda-chat-end-conversation')?.click();
   });
 
-  // Wait for the collapse menu item to appear
-  const collapseAppeared = await poll(
+  // Wait for the Yes confirmation button inside #isChatAlertPopup
+  const yesAppeared = await poll(
     page,
     () => {
-      const el = document.getElementById('oda-chat-collapse');
-      return el && getComputedStyle(el).display !== 'none';
+      const popup = document.getElementById('isChatAlertPopup');
+      if (!popup) return false;
+      const buttons = popup.querySelectorAll('button');
+      return [...buttons].some(b => b.textContent?.trim() === 'Yes');
     },
     3000,
   );
 
-  if (!collapseAppeared) return false;
+  if (!yesAppeared) return false;
 
   await page.evaluate(() => {
-    document.getElementById('oda-chat-collapse')?.click();
+    const popup = document.getElementById('isChatAlertPopup');
+    const buttons = popup?.querySelectorAll('button') || [];
+    [...buttons].find(b => b.textContent?.trim() === 'Yes')?.click();
   });
 
   return waitForUnifiedButton(page);
