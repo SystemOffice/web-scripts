@@ -1203,6 +1203,19 @@
     }
   };
 
+  // widgets/link.js
+  var LinkWidget = class {
+    constructor({ displayName, url, order }) {
+      this.displayName = displayName;
+      this.url = url;
+      this.id = "link-" + displayName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      this.config = { order };
+    }
+    open() {
+      window.open(this.url, "_blank", "noopener");
+    }
+  };
+
   // mount-widgets.js
   async function mountAllWidgets(widgets2, logger) {
     await Promise.all(widgets2.map(
@@ -1216,7 +1229,8 @@
   var DEFAULT_CONFIG = {
     zoom: { enabled: false },
     anthology: { enabled: false },
-    chatbot: { enabled: false }
+    chatbot: { enabled: false },
+    links: []
   };
   async function fetchWithTimeout(url, timeoutMs) {
     const controller = new AbortController();
@@ -1275,6 +1289,13 @@
         const chatbotWidget = new ChatbotWidget(config.chatbot);
         widgets.push(chatbotWidget);
         widgetRegistry.set(chatbotWidget.id, chatbotWidget);
+      }
+      if (config.links?.length) {
+        for (const linkConfig of config.links) {
+          if (!linkConfig.enabled) continue;
+          const linkWidget = new LinkWidget(linkConfig);
+          widgets.push(linkWidget);
+        }
       }
       widgets.sort((a, b) => {
         const orderA = a.config?.order ?? 999;
@@ -1387,11 +1408,18 @@
     item.className = "chat-widget-menu-item chat-widget-menu-item-modern";
     item.setAttribute("role", "menuitem");
     item.setAttribute("tabindex", "0");
-    item.onclick = () => {
-      closeMenu();
-      setUnifiedButtonVisibility(false);
-      state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
-    };
+    if (widget.url) {
+      item.onclick = () => {
+        widget.open();
+        closeMenu();
+      };
+    } else {
+      item.onclick = () => {
+        closeMenu();
+        setUnifiedButtonVisibility(false);
+        state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
+      };
+    }
     return item;
   }
   function createMenuElement(state) {

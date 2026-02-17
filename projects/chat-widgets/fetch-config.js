@@ -1,7 +1,8 @@
 const DEFAULT_CONFIG = {
   zoom: { enabled: false },
   anthology: { enabled: false },
-  chatbot: { enabled: false }
+  chatbot: { enabled: false },
+  links: []
 };
 
 export async function fetchWithTimeout(url, timeoutMs) {

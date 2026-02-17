@@ -4,6 +4,7 @@ import { ChatWidgetState } from './state.js';
 import { ZoomWidget } from './widgets/zoom.js';
 import { AnthologyWidget } from './widgets/anthology.js';
 import { ChatbotWidget } from './widgets/chatbot.js';
+import { LinkWidget } from './widgets/link.js';
 import { defaultConfig } from './config.js';
 import { defaultErrorHandler } from './error-handler.js';
 import { defaultLogger } from './logger.js';
@@ -46,6 +47,14 @@ async function initializeWidgets() {
       const chatbotWidget = new ChatbotWidget(config.chatbot);
       widgets.push(chatbotWidget);
       widgetRegistry.set(chatbotWidget.id, chatbotWidget);
+    }
+
+    if (config.links?.length) {
+      for (const linkConfig of config.links) {
+        if (!linkConfig.enabled) continue;
+        const linkWidget = new LinkWidget(linkConfig);
+        widgets.push(linkWidget);
+      }
     }
 
     // Sort widgets by order property (if specified), otherwise maintain default order
@@ -186,11 +195,20 @@ function createMenuItem(widget, state) {
   item.className = 'chat-widget-menu-item chat-widget-menu-item-modern';
   item.setAttribute('role', 'menuitem');
   item.setAttribute('tabindex', '0');
-  item.onclick = () => {
-    closeMenu();
-    setUnifiedButtonVisibility(false);
-    state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
-  };
+
+  if (widget.url) {
+    item.onclick = () => {
+      widget.open();
+      closeMenu();
+    };
+  } else {
+    item.onclick = () => {
+      closeMenu();
+      setUnifiedButtonVisibility(false);
+      state.activateWidget(widget.id, () => setUnifiedButtonVisibility(true));
+    };
+  }
+
   return item;
 }
 
