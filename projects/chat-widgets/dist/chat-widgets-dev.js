@@ -1184,7 +1184,8 @@
       };
       this.callbacks.documentClickListener = (event) => {
         const target = event.target;
-        const isCloseOrMinimizeButton = target.matches(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.matches("#oda-chat-collapse") || target.matches("#oda-chat-end-conversation") || target.matches('li[data-value="collapse"]') || target.closest(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.closest("#oda-chat-collapse") || target.closest("#oda-chat-end-conversation") || target.closest('li[data-value="collapse"]') || target.textContent && target.textContent.includes("Minimize conversation");
+        const isEndConversationConfirm = target.tagName === "BUTTON" && target.textContent?.trim() === "Yes" && target.closest("#isChatAlertPopup");
+        const isCloseOrMinimizeButton = isEndConversationConfirm || target.matches(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.matches("#oda-chat-collapse") || target.matches('li[data-value="collapse"]') || target.closest(".oda-chat-popup-action.oda-chat-filled.oda-chat-flex") || target.closest("#oda-chat-collapse") || target.closest('li[data-value="collapse"]') || target.textContent && target.textContent.includes("Minimize conversation");
         if (isCloseOrMinimizeButton && this.state.active) {
           console.log("\u{1F50D} Chatbot: Close or minimize button clicked - returning to unified menu");
           this.callbacks.closeListener();
