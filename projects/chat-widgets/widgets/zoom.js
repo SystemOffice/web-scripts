@@ -100,6 +100,19 @@ export class ZoomWidget extends BaseWidget {
     }
   }
 
+  async deactivate(callback) {
+    await super.deactivate(callback);
+
+    // Remove the Zoom SDK script tag from the DOM.
+    // The IntraSee chatbot SDK refuses to initialize when a Zoom SDK
+    // script tag is present. The Zoom SDK remains functional in memory
+    // so it will work on re-activation without re-injection.
+    const scriptTag = document.getElementById(this.scriptId);
+    if (scriptTag) {
+      scriptTag.remove();
+    }
+  }
+
   removeCloseListener() {
     if (!this.callbacks.closeListener) return;
     

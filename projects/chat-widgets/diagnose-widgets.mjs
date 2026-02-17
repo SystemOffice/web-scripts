@@ -186,16 +186,33 @@ async function waitForChatbot(page, timeout) {
 }
 
 async function closeChatbot(page) {
-  const closeAppeared = await poll(
+  // Open the options menu first
+  const optionsAppeared = await poll(
     page,
-    () => !!document.getElementById('oda-chat-end-conversation'),
+    () => !!document.querySelector('.oda-chat-button-show-options'),
     5000,
   );
 
-  if (!closeAppeared) return false;
+  if (!optionsAppeared) return false;
 
   await page.evaluate(() => {
-    document.getElementById('oda-chat-end-conversation')?.click();
+    document.querySelector('.oda-chat-button-show-options')?.click();
+  });
+
+  // Wait for the collapse menu item to appear
+  const collapseAppeared = await poll(
+    page,
+    () => {
+      const el = document.getElementById('oda-chat-collapse');
+      return el && getComputedStyle(el).display !== 'none';
+    },
+    3000,
+  );
+
+  if (!collapseAppeared) return false;
+
+  await page.evaluate(() => {
+    document.getElementById('oda-chat-collapse')?.click();
   });
 
   return waitForUnifiedButton(page);

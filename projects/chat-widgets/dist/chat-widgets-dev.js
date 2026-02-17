@@ -765,6 +765,13 @@
         setTimeout(() => this.attachDirectListeners(), 500);
       }
     }
+    async deactivate(callback) {
+      await super.deactivate(callback);
+      const scriptTag = document.getElementById(this.scriptId);
+      if (scriptTag) {
+        scriptTag.remove();
+      }
+    }
     removeCloseListener() {
       if (!this.callbacks.closeListener) return;
       if (this.callbacks.documentClickListener) {
