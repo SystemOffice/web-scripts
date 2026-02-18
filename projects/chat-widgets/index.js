@@ -74,7 +74,8 @@ async function initializeWidgets() {
 
     defaultLogger.info(`Initialized ${widgets.length} widgets: ${widgets.map(w => w.id).join(', ')}`);
 
-    await mountAllWidgets(widgets, defaultLogger);
+    const mountableWidgets = widgets.filter(w => typeof w.mount === 'function');
+    await mountAllWidgets(mountableWidgets, defaultLogger);
 
     const state = new ChatWidgetState(widgets);
     createUnifiedButton(state);
