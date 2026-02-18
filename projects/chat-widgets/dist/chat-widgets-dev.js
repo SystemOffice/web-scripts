@@ -25,13 +25,13 @@
             }
           });
           this.activeWidgetId = widgetId;
-        } else if (widget.state.active) {
+        } else if (widget.state?.active) {
           widget.deactivate();
         }
       });
     }
     hideAll() {
-      this.widgets.forEach((widget) => widget.hide());
+      this.widgets.forEach((widget) => widget.hide?.());
       this.activeWidgetId = null;
     }
   };
@@ -1310,7 +1310,8 @@
       defaultLogger.info(`Initialized ${widgets.length} widgets: ${widgets.map((w) => w.id).join(", ")}`);
       const mountableWidgets = widgets.filter((w) => typeof w.mount === "function");
       await mountAllWidgets(mountableWidgets, defaultLogger);
-      const state = new ChatWidgetState(widgets);
+      const statefulWidgets = widgets.filter((w) => !w.url);
+      const state = new ChatWidgetState(statefulWidgets);
       createUnifiedButton(state);
     } catch (error) {
       defaultLogger.error("Widget system initialization failed", { error: error.message });

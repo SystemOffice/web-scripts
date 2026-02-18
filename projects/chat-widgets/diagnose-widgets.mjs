@@ -284,7 +284,9 @@ async function activateAndClose(page, widgetName, timeout) {
 
 // ─── Main ───────────────────────────────────────────────────────────
 
-const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+const skipSdkTests = process.argv.includes('--links-only');
+
+const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'], protocolTimeout: 60000 });
 const page = await browser.newPage();
 const consoleLogs = collectConsoleLogs(page);
 
@@ -293,7 +295,13 @@ await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
 await page.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
 console.log('Chat widget button found.\n');
 
+if (skipSdkTests) {
+  console.log('Skipping SDK-dependent tests 1–15 (--links-only)\n');
+}
+
 // ─── Tests 1–3: Individual widget activation ───────────────────────
+
+if (!skipSdkTests) {
 
 const activationTests = [
   { num: 1, name: 'Zoom: activate and verify',      widget: 'Zoom' },
@@ -390,6 +398,265 @@ logResult(
   ok15 && triple.chatbotVisible && !triple.zoomVisible && !triple.anthologyVisible,
   `zoom=${triple.zoomVisible} anthology=${triple.anthologyVisible} chatbot=${triple.chatbotVisible}`,
 );
+
+} // end skipSdkTests guard
+
+// ─── Tests 16–18: Menu structure and accessibility ───────────────────
+
+console.log('Test 16: Menu — correct number of menu items');
+await freshPage(page);
+await page.click('#chat-widget-main-btn');
+await page.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+const menuItemCount = await page.evaluate(() => {
+  return document.querySelectorAll('[role="menuitem"]').length;
+});
+const menuLabels = await page.evaluate(() => {
+  return [...document.querySelectorAll('[role="menuitem"]')].map(i => i.innerText);
+});
+logResult('Menu has 5 items (3 widgets + 2 links)', menuItemCount === 5, `found ${menuItemCount}: [${menuLabels.join(', ')}]`);
+
+console.log('Test 17: Menu — button has correct ARIA attributes');
+const ariaAttrs = await page.evaluate(() => {
+  const btn = document.getElementById('chat-widget-main-btn');
+  return {
+    hasPopup: btn?.getAttribute('aria-haspopup'),
+    expanded: btn?.getAttribute('aria-expanded'),
+    label: btn?.getAttribute('aria-label'),
+  };
+});
+const ariaOk = ariaAttrs.hasPopup === 'true'
+  && ariaAttrs.expanded === 'true'
+  && ariaAttrs.label !== null;
+logResult('Button ARIA attributes', ariaOk, JSON.stringify(ariaAttrs));
+
+console.log('Test 18: Menu — outside click closes menu');
+await freshPage(page);
+await page.click('#chat-widget-main-btn');
+await page.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+await page.click('body');
+await new Promise(r => setTimeout(r, 300));
+const menuHidden = await page.evaluate(() => {
+  return document.getElementById('chat-widget-menu')?.style.display === 'none';
+});
+logResult('Outside click closes menu', menuHidden);
+
+// ─── Tests 19–22: Link widgets ──────────────────────────────────────
+
+// Open a new page with injected config that includes link widgets
+console.log('\n--- Link widget tests (injected config) ---');
+
+const linkPage = await browser.newPage();
+const linkLogs = collectConsoleLogs(linkPage);
+
+// Inject config before page loads — use Object.defineProperty to prevent
+// the page's own script from overwriting our config
+await linkPage.evaluateOnNewDocument(() => {
+  const config = {
+    zoom: { enabled: false },
+    anthology: { enabled: false },
+    chatbot: { enabled: false },
+    links: [
+      { enabled: true, displayName: 'Help Center', url: 'https://example.com/help', order: 1 },
+      { enabled: true, displayName: 'FAQ', url: 'https://example.com/faq', order: 2 },
+      { enabled: false, displayName: 'Disabled Link', url: 'https://example.com/disabled', order: 3 },
+    ],
+  };
+  Object.defineProperty(window, 'CHAT_WIDGET_CONFIG', {
+    value: config,
+    writable: false,
+    configurable: false,
+  });
+});
+
+await linkPage.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
+await linkPage.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
+
+console.log('Test 19: Link — enabled links appear in menu');
+await linkPage.click('#chat-widget-main-btn');
+await linkPage.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+const linkLabels = await linkPage.evaluate(() => {
+  const items = [...document.querySelectorAll('[role="menuitem"]')];
+  return items.map(i => i.innerText);
+});
+const hasHelp = linkLabels.includes('Help Center');
+const hasFaq = linkLabels.includes('FAQ');
+const hasDisabled = linkLabels.includes('Disabled Link');
+logResult(
+  'Enabled links appear, disabled links hidden',
+  hasHelp && hasFaq && !hasDisabled,
+  `items: [${linkLabels.join(', ')}]`,
+);
+
+console.log('Test 20: Link — only 2 menu items (disabled link excluded)');
+logResult('Link menu has 2 items', linkLabels.length === 2, `found ${linkLabels.length}`);
+
+console.log('Test 21: Link — clicking link opens new tab');
+// Re-open menu if needed
+const menuVisible = await linkPage.evaluate(() => {
+  return document.getElementById('chat-widget-menu')?.style.display === 'block';
+});
+if (!menuVisible) {
+  await linkPage.click('#chat-widget-main-btn');
+  await linkPage.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+}
+
+const popupPromise = new Promise(resolve => {
+  browser.once('targetcreated', target => resolve(target.url()));
+  setTimeout(() => resolve(null), 5000);
+});
+
+await linkPage.evaluate(() => {
+  const items = [...document.querySelectorAll('[role="menuitem"]')];
+  const helpItem = items.find(i => i.innerText === 'Help Center');
+  helpItem?.click();
+});
+
+const popupUrl = await popupPromise;
+logResult(
+  'Click opens URL in new tab',
+  popupUrl === 'https://example.com/help',
+  popupUrl || 'no popup detected',
+);
+
+// Close the popup tab so it doesn't interfere with later tests
+const pages = await browser.pages();
+for (const p of pages) {
+  if (p !== linkPage && p !== page) await p.close();
+}
+
+console.log('Test 22: Link — unified button stays visible after link click');
+const buttonStaysVisible = await linkPage.evaluate(() => {
+  const container = document.getElementById('chat-widget-container');
+  return container && getComputedStyle(container).display === 'flex';
+});
+logResult('Unified button stays visible after link click', buttonStaysVisible);
+
+console.log('Test 23: Link — menu closes after link click');
+const menuClosedAfterLink = await linkPage.evaluate(() => {
+  return document.getElementById('chat-widget-menu')?.style.display === 'none';
+});
+logResult('Menu closes after link click', menuClosedAfterLink);
+
+console.log('Test 24: Link — items sorted by order');
+// Reload to get fresh menu
+await linkPage.reload({ waitUntil: 'networkidle2', timeout: 60000 });
+await linkPage.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
+await new Promise(r => setTimeout(r, 500));
+await linkPage.click('#chat-widget-main-btn');
+await linkPage.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+const orderedLabels = await linkPage.evaluate(() => {
+  const items = [...document.querySelectorAll('[role="menuitem"]')];
+  return items.map(i => i.innerText);
+});
+const correctOrder = orderedLabels[0] === 'Help Center' && orderedLabels[1] === 'FAQ';
+logResult('Links sorted by order', correctOrder, `order: [${orderedLabels.join(', ')}]`);
+
+await linkPage.close();
+
+// ─── Tests 25–26: Mixed widgets + links ─────────────────────────────
+
+console.log('\n--- Mixed widgets + links tests ---');
+
+const mixedPage = await browser.newPage();
+collectConsoleLogs(mixedPage);
+
+// Block third-party SDK scripts so they don't hang the page in headless mode
+await mixedPage.setRequestInterception(true);
+mixedPage.on('request', (req) => {
+  const url = req.url();
+  if (url.includes('intrasee.com') || url.includes('zoom.us') || url.includes('amazon-connect')) {
+    req.abort();
+  } else {
+    req.continue();
+  }
+});
+
+await mixedPage.evaluateOnNewDocument(() => {
+  const config = {
+    zoom: { enabled: false },
+    anthology: { enabled: false },
+    chatbot: {
+      enabled: true,
+      org: 'VCCS_GC',
+      scriptId: 'IS_CV_PUBLIC_HOOK',
+      src: 'https://vccs-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js',
+      launcherId: 'idalogin',
+      displayName: 'AI Chatbot',
+      order: 3,
+    },
+    links: [
+      { enabled: true, displayName: 'Help Center', url: 'https://example.com/help', order: 1 },
+      { enabled: true, displayName: 'FAQ', url: 'https://example.com/faq', order: 5 },
+    ],
+  };
+  Object.defineProperty(window, 'CHAT_WIDGET_CONFIG', {
+    value: config,
+    writable: false,
+    configurable: false,
+  });
+});
+
+await mixedPage.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
+await mixedPage.waitForSelector('#chat-widget-main-btn', { timeout: 15000 });
+await new Promise(r => setTimeout(r, 3000));
+
+console.log('Test 25: Mixed — links and widgets interleave by order');
+await mixedPage.click('#chat-widget-main-btn');
+await mixedPage.waitForSelector('[role="menuitem"]', { visible: true, timeout: 3000 });
+const mixedLabels = await mixedPage.evaluate(() => {
+  const items = [...document.querySelectorAll('[role="menuitem"]')];
+  return items.map(i => i.innerText);
+});
+const expectedOrder = ['Help Center', 'AI Chatbot', 'FAQ'];
+const mixedOrderOk = mixedLabels.length === 3
+  && mixedLabels[0] === expectedOrder[0]
+  && mixedLabels[1] === expectedOrder[1]
+  && mixedLabels[2] === expectedOrder[2];
+logResult(
+  'Mixed: links + widgets sorted by order',
+  mixedOrderOk,
+  `expected [${expectedOrder.join(', ')}] got [${mixedLabels.join(', ')}]`,
+);
+
+console.log('Test 26: Mixed — link click keeps unified button, menu re-opens');
+try {
+  // Click the Help Center link
+  await mixedPage.evaluate(() => {
+    const items = [...document.querySelectorAll('[role="menuitem"]')];
+    items.find(i => i.innerText === 'Help Center')?.click();
+  });
+  await new Promise(r => setTimeout(r, 500));
+
+  const mixedButtonVisible = await mixedPage.evaluate(() => {
+    const container = document.getElementById('chat-widget-container');
+    return container && getComputedStyle(container).display === 'flex';
+  });
+
+  // Verify menu can re-open after link click
+  let menuReopens = false;
+  if (mixedButtonVisible) {
+    await mixedPage.click('#chat-widget-main-btn');
+    menuReopens = await poll(
+      mixedPage,
+      () => document.getElementById('chat-widget-menu')?.style.display === 'block',
+      3000,
+    );
+  }
+
+  logResult(
+    'Mixed: button visible + menu re-opens after link click',
+    mixedButtonVisible && menuReopens,
+    `button=${mixedButtonVisible} menuReopens=${menuReopens}`,
+  );
+} catch (error) {
+  logResult(
+    'Mixed: button visible + menu re-opens after link click',
+    false,
+    `error: ${error.message}`,
+  );
+}
+
+await mixedPage.close().catch(() => {});
 
 // ─── Done ───────────────────────────────────────────────────────────
 
