@@ -77,7 +77,8 @@ async function initializeWidgets() {
     const mountableWidgets = widgets.filter(w => typeof w.mount === 'function');
     await mountAllWidgets(mountableWidgets, defaultLogger);
 
-    const state = new ChatWidgetState(widgets);
+    const statefulWidgets = widgets.filter(w => !w.url);
+    const state = new ChatWidgetState(statefulWidgets);
     createUnifiedButton(state);
 
   } catch (error) {

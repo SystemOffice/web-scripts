@@ -22,14 +22,14 @@ export class ChatWidgetState {
           }
         });
         this.activeWidgetId = widgetId;
-      } else if (widget.state.active) {
+      } else if (widget.state?.active) {
         widget.deactivate();
       }
     });
   }
 
   hideAll() {
-    this.widgets.forEach(widget => widget.hide());
+    this.widgets.forEach(widget => widget.hide?.());
     this.activeWidgetId = null;
   }
 } 

@@ -179,3 +179,34 @@ test('test_activateWidget_currentCallback_fires', () => {
   expect(onDeactivate).toHaveBeenCalledTimes(1);
   expect(state.activeWidgetId).toBeNull();
 });
+
+// Link widget compatibility tests
+
+test('test_activateWidget_widgetWithoutState_doesNotCrash', () => {
+  const zoom = createMockWidget('zoom');
+  const linkWidget = { id: 'link-help', displayName: 'Help' };
+  const state = new ChatWidgetState([zoom, linkWidget]);
+
+  expect(() => state.activateWidget('zoom', () => {})).not.toThrow();
+  expect(zoom.activate).toHaveBeenCalledTimes(1);
+});
+
+test('test_activateWidget_widgetWithoutState_skipsDeactivate', () => {
+  const zoom = createMockWidget('zoom');
+  const linkWidget = { id: 'link-faq', displayName: 'FAQ' };
+  const state = new ChatWidgetState([linkWidget, zoom]);
+
+  state.activateWidget('zoom', () => {});
+
+  expect(zoom.activate).toHaveBeenCalledTimes(1);
+  expect(state.activeWidgetId).toBe('zoom');
+});
+
+test('test_hideAll_widgetWithoutHide_doesNotCrash', () => {
+  const zoom = createMockWidget('zoom');
+  const linkWidget = { id: 'link-help', displayName: 'Help' };
+  const state = new ChatWidgetState([zoom, linkWidget]);
+
+  expect(() => state.hideAll()).not.toThrow();
+  expect(zoom.hide).toHaveBeenCalledTimes(1);
+});
