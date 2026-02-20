@@ -431,14 +431,20 @@ function addVCCSChat(){
 addVCCSChat();
 
 function moveButtonsOnMobile(){
-	if (isSandbox() && document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1 ){
-		if (screen.width >= 1000){
+	if (isSandbox() && (document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1) ){
+		if (screen.width <= 1000){
+			// move the request buttons up to the top
 			const spans = document.querySelectorAll('#divSidebar span:has(a.DetailAction[href^="TicketRequests"])');
 			const mainContent = document.querySelector('#divMainContent');
 			spans.forEach(el => mainContent.prepend(el));
 			
+			// hide the feed
 			const form = document.querySelector('.feed form');
-			form.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+			form.querySelectorAll('input[type="checkbox"]').forEach(function(el) {
+				if (el.checked){
+					el.click();
+				}
+			});
 			form.querySelector('button').click();
 		}
     }
