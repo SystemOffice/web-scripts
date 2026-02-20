@@ -431,7 +431,9 @@ function addVCCSChat(){
 addVCCSChat();
 
 function moveButtonsOnMobile(){
-	if (isSandbox() && (document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1) ){
+	// sandbox
+	// if (isSandbox() && (document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1) ){
+	if ( true ){
 		if (screen.width <= 1000){
 			// move the request buttons up to the top
 			const spans = document.querySelectorAll('#divSidebar span:has(a.DetailAction[href^="TicketRequests"])');
