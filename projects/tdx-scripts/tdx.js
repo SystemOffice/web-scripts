@@ -430,6 +430,22 @@ function addVCCSChat(){
 
 addVCCSChat();
 
+function moveButtonsOnMobile(){
+	if (isSandbox() && document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1 ){
+		if (screen.width >= 1000){
+			const spans = document.querySelectorAll('#divSidebar span:has(a.DetailAction[href^="TicketRequests"])');
+			const mainContent = document.querySelector('#divMainContent');
+			spans.forEach(el => mainContent.prepend(el));
+			
+			const form = document.querySelector('.feed form');
+			form.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+			form.querySelector('button').click();
+		}
+    }
+}
+
+moveButtonsOnMobile();
+
 // add sandbox footer
 function appendHtml(el, str) {
   var div = document.createElement('div'); //container to append to
