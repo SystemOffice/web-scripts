@@ -436,8 +436,10 @@ function moveButtonsOnMobile(){
 			// move the request buttons up to the top
 			const spans = document.querySelectorAll('#divSidebar span:has(a.DetailAction[href^="TicketRequests"])');
 			const mainContent = document.querySelector('#divMainContent');
-			spans.forEach(el => mainContent.prepend(el));
-			
+			// this reverses the order. I think prepend can take a list of nodes, but it adds them in order, so we reverse them first
+			const reversed = [...spans].reverse();
+			reversed.forEach(el => mainContent.prepend(el));
+						
 			// hide the feed
 			const form = document.querySelector('.feed form');
 			form.querySelectorAll('input[type="checkbox"]').forEach(function(el) {
