@@ -440,14 +440,18 @@ function moveButtonsOnMobile(){
 			const reversed = [...spans].reverse();
 			reversed.forEach(el => mainContent.prepend(el));
 						
-			// hide the feed
-			const form = document.querySelector('.feed form');
-			form.querySelectorAll('input[type="checkbox"]').forEach(function(el) {
-				if (el.checked){
-					el.click();
+			// hide the feed - looks like it's loading somewhat asynchronously
+			$(document).ready(function() {
+				const form = document.querySelector('.feed form');
+				if (form){
+					form.querySelectorAll('input[type="checkbox"]').forEach(function(el) {
+						if (el.checked){
+							el.click();
+						}
+					});
+					form.querySelector('button').click();
 				}
 			});
-			form.querySelector('button').click();
 		}
     }
 }
