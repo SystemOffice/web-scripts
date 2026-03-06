@@ -823,32 +823,33 @@
     loadScriptOnce() {
       if (this.scriptLoaded || document.getElementById(this.scriptId)) {
         console.log("\u{1F50D} Anthology: Script already loaded, skipping");
-        return;
+        return Promise.resolve();
       }
       console.log("\u{1F50D} Anthology: Loading Amazon Connect script...");
       this.scriptLoaded = true;
-      (function(w, d, x, id, config, originalConfig) {
-        console.log("\u{1F50D} Anthology: Creating script element");
-        var s = d.createElement("script");
+      const widget = this;
+      const originalConfig = this.originalConfig;
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
         s.src = "https://dtn7rvxwwlhud.cloudfront.net/amazon-connect-chat-interface-client.js";
         s.async = true;
-        s.id = id;
+        s.id = widget.scriptId;
         s.onload = function() {
           console.log("\u{1F50D} Anthology: Amazon Connect script loaded successfully");
+          resolve();
         };
         s.onerror = function() {
           console.log("\u274C Anthology: Amazon Connect script failed to load");
+          reject(new Error("Amazon Connect script failed to load"));
         };
-        d.getElementsByTagName("head")[0].appendChild(s);
+        document.getElementsByTagName("head")[0].appendChild(s);
         console.log("\u{1F50D} Anthology: Script element added to head");
-        w[x] = w[x] || function() {
-          console.log("\u{1F50D} Anthology: Amazon Connect function called with args:", arguments);
-          (w[x].ac = w[x].ac || []).push(arguments);
+        window.amazon_connect = window.amazon_connect || function() {
+          (window.amazon_connect.ac = window.amazon_connect.ac || []).push(arguments);
         };
-        console.log("\u{1F50D} Anthology: Checking config:", originalConfig);
         if (originalConfig.snippetId) {
           console.log("\u{1F50D} Anthology: SnippetId found, applying configuration...");
-          w[x]("styles", {
+          window.amazon_connect("styles", {
             iconType: "CHAT",
             openChat: {
               color: "#ffffff",
@@ -859,30 +860,30 @@
               backgroundColor: "#830065"
             }
           });
-          w[x]("snippetId", originalConfig.snippetId);
-          w[x]("supportedMessagingContentTypes", [
+          window.amazon_connect("snippetId", originalConfig.snippetId);
+          window.amazon_connect("supportedMessagingContentTypes", [
             "text/plain",
             "text/markdown",
             "application/vnd.amazonaws.connect.message.interactive",
             "application/vnd.amazonaws.connect.message.interactive.response"
           ]);
-          w[x]("customDisplayNames", {
+          window.amazon_connect("customDisplayNames", {
             transcript: {
               botMessageDisplayName: "Virtual Agent"
             }
           });
-          w[x]("mockLexBotTyping", true);
-          w[x]("contactAttributes", {
+          window.amazon_connect("mockLexBotTyping", true);
+          window.amazon_connect("contactAttributes", {
             institutionAlias: originalConfig.institutionAlias || "default"
           });
-          w[x]("customizationObject", {
+          window.amazon_connect("customizationObject", {
             composer: {
               disableEmojiPicker: true
             }
           });
-          config.initialized = true;
+          widget.initialized = true;
         }
-      })(window, document, "amazon_connect", this.scriptId, this, this.originalConfig);
+      });
     }
     getElementsToToggle() {
       const allElements = Array.from(document.querySelectorAll('iframe[src*="amazon"], [id*="amazon"], [class*="amazon"]'));
@@ -912,9 +913,10 @@
       this.callbacks.onDeactivate = onDeactivate;
       if (!this.scriptLoaded) {
         console.log("\u{1F50D} Anthology: Loading script for first time");
-        this.loadScriptOnce();
+        await this.loadScriptOnce();
       }
-      const maxWait = this.scriptLoaded ? 500 : 5e3;
+      const timingConfig = this.widgetConfig.getTimingConfig(this.id);
+      const maxWait = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
       try {
         await pollUntil(
           () => document.querySelector(this.config.invokeSelector),
@@ -923,14 +925,14 @@
       } catch {
         console.log("\u{1F50D} Anthology: Invoke selector not found within timeout, proceeding with retry");
       }
-      const stabilizationDelay = this.scriptLoaded ? 500 : 2e3;
-      await new Promise((r) => setTimeout(r, stabilizationDelay));
+      await new Promise((r) => setTimeout(r, timingConfig.stabilizationDelay));
       if (this.state.active) {
         this.invokeRetryCount = 0;
         console.log("\u{1F50D} Anthology: Invoking widget");
         this.invokeWidget();
         this.toggleVisibility(true);
         this.attachCloseListener();
+        this.firstActivation = false;
       }
     }
     attachCloseListener() {
