@@ -33,41 +33,41 @@ export class AnthologyWidget extends BaseWidget {
   loadScriptOnce() {
     if (this.scriptLoaded || document.getElementById(this.scriptId)) {
       console.log('🔍 Anthology: Script already loaded, skipping');
-      return;
+      return Promise.resolve();
     }
 
     console.log('🔍 Anthology: Loading Amazon Connect script...');
     this.scriptLoaded = true;
 
-    // Load Amazon Connect script
-    (function(w, d, x, id, config, originalConfig) {
-      console.log('🔍 Anthology: Creating script element');
-      var s = d.createElement('script');
+    const widget = this;
+    const originalConfig = this.originalConfig;
+
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
       s.src = 'https://dtn7rvxwwlhud.cloudfront.net/amazon-connect-chat-interface-client.js';
       s.async = true;
-      s.id = id;
+      s.id = widget.scriptId;
 
       s.onload = function() {
         console.log('🔍 Anthology: Amazon Connect script loaded successfully');
+        resolve();
       };
 
       s.onerror = function() {
         console.log('❌ Anthology: Amazon Connect script failed to load');
+        reject(new Error('Amazon Connect script failed to load'));
       };
 
-      d.getElementsByTagName('head')[0].appendChild(s);
+      document.getElementsByTagName('head')[0].appendChild(s);
       console.log('🔍 Anthology: Script element added to head');
 
-      w[x] = w[x] || function() {
-        console.log('🔍 Anthology: Amazon Connect function called with args:', arguments);
-        (w[x].ac = w[x].ac || []).push(arguments);
+      window.amazon_connect = window.amazon_connect || function() {
+        (window.amazon_connect.ac = window.amazon_connect.ac || []).push(arguments);
       };
 
-      // Apply configuration
-      console.log('🔍 Anthology: Checking config:', originalConfig);
       if (originalConfig.snippetId) {
         console.log('🔍 Anthology: SnippetId found, applying configuration...');
-        w[x]('styles', {
+        window.amazon_connect('styles', {
           iconType: 'CHAT',
           openChat: {
             color: '#ffffff',
@@ -79,38 +79,36 @@ export class AnthologyWidget extends BaseWidget {
           }
         });
 
-        w[x]('snippetId', originalConfig.snippetId);
+        window.amazon_connect('snippetId', originalConfig.snippetId);
 
-        w[x]('supportedMessagingContentTypes', [
+        window.amazon_connect('supportedMessagingContentTypes', [
           'text/plain',
           'text/markdown',
           'application/vnd.amazonaws.connect.message.interactive',
           'application/vnd.amazonaws.connect.message.interactive.response'
         ]);
 
-        w[x]('customDisplayNames', {
+        window.amazon_connect('customDisplayNames', {
           transcript: {
             botMessageDisplayName: 'Virtual Agent'
           }
         });
 
-        w[x]('mockLexBotTyping', true);
+        window.amazon_connect('mockLexBotTyping', true);
 
-        w[x]('contactAttributes', {
+        window.amazon_connect('contactAttributes', {
           institutionAlias: originalConfig.institutionAlias || 'default'
         });
 
-        w[x]('customizationObject', {
+        window.amazon_connect('customizationObject', {
           composer: {
             disableEmojiPicker: true
           }
         });
 
-        config.initialized = true;
-
-        // Visibility is controlled by activate() — no initial hide needed
+        widget.initialized = true;
       }
-    })(window, document, 'amazon_connect', this.scriptId, this, this.originalConfig);
+    });
   }
 
   getElementsToToggle() {
@@ -149,10 +147,11 @@ export class AnthologyWidget extends BaseWidget {
 
     if (!this.scriptLoaded) {
       console.log('🔍 Anthology: Loading script for first time');
-      this.loadScriptOnce();
+      await this.loadScriptOnce();
     }
 
-    const maxWait = this.scriptLoaded ? 500 : 5000;
+    const timingConfig = this.widgetConfig.getTimingConfig(this.id);
+    const maxWait = this.firstActivation ? timingConfig.firstActivationDelay : timingConfig.subsequentActivationDelay;
 
     try {
       await pollUntil(
@@ -163,9 +162,7 @@ export class AnthologyWidget extends BaseWidget {
       console.log('🔍 Anthology: Invoke selector not found within timeout, proceeding with retry');
     }
 
-    // Let Amazon Connect SDK stabilize before invoking and monitoring
-    const stabilizationDelay = this.scriptLoaded ? 500 : 2000;
-    await new Promise(r => setTimeout(r, stabilizationDelay));
+    await new Promise(r => setTimeout(r, timingConfig.stabilizationDelay));
 
     if (this.state.active) {
       this.invokeRetryCount = 0;
@@ -173,6 +170,7 @@ export class AnthologyWidget extends BaseWidget {
       this.invokeWidget();
       this.toggleVisibility(true);
       this.attachCloseListener();
+      this.firstActivation = false;
     }
   }
 
