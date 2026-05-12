@@ -18,7 +18,7 @@ function processData(employeeData) {
         // Assuming CSV columns: displayName, organizationPerson.title, user.manager.title
         var supervisorId = row.REPORTS_TO;
         const id = row.IDENTIFIER_NAME;
-       
+      
         employees[id] = {
             id: id,
             name: row.NAME_DISPLAY,
@@ -46,7 +46,7 @@ function processData(employeeData) {
         const childrenCt = employeeData.filter((item) => item["REPORTS_TO"] == employee.id).length;
         // if not the root and has more than 4 direct reports, mark as hybrid, 
         // which will display vertically instead of horizontally
-        if (childrenCt > 5 && employee.id != root.id) {
+        if (childrenCt > 4 && employee.id != root.id) {
             employee.hybrid = true;
         }
         if (employee.supervisorId !== "" && employees[employee.supervisorId]) {
