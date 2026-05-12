@@ -18,11 +18,7 @@ function processData(employeeData) {
         // Assuming CSV columns: displayName, organizationPerson.title, user.manager.title
         var supervisorId = row.REPORTS_TO;
         const id = row.IDENTIFIER_NAME;
-
-        if (supervisorId == '1907711') {
-            supervisorId = "3803059"
-        }
-        
+       
         employees[id] = {
             id: id,
             name: row.NAME_DISPLAY,
@@ -37,8 +33,8 @@ function processData(employeeData) {
         //     root = employees[id];
         // }
 
-		// hard-code dennis moynihan as root of tree
-        if (row.cn == 'dm23348') {
+		// hard-code Dan Lepore as root of tree
+        if (row.cn == 'dl29339') {
             root = employees[id];
             root.className = "root-node";
         }
@@ -89,7 +85,7 @@ $(function() {
 
     $('#chart-container').append(`<i class="fa-solid fa-spinner spinner"></i>`);
     $.ajax({
-    'url': 'people2.csv',
+    'url': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTPDcbkLK1xuXV2hLpthcGQO9VDBA6TXGWK-0pMw655NZl91NJxRyJXB1nlr4UXCuGgrRxZ9huHwIMQ/pub?gid=194817631&single=true&output=csv',
     'dataType': 'text'
     })
     .done(function(data, textStatus, jqXHR) {
