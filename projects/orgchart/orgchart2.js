@@ -73,7 +73,17 @@ function processData(employeeData) {
 				walkPerson(node.children[person]);
 			}
 			childLevel--;
-		}
+            // if a person has direct reports, sort so that managers appear before non-managers
+			if (childLevel == 2){
+				node.children.sort((a, b) => {
+				    const aIsManager = a.className && a.className.includes('manager');
+				    const bIsManager = b.className && b.className.includes('manager');
+				
+				    // Sort managers (true/1) before non-managers (false/0)
+				    return bIsManager - aIsManager;
+				});
+			}
+        }
 	}
 	walkPerson(root);
 
