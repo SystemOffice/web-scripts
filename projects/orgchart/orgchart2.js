@@ -25,7 +25,9 @@ function processData(employeeData) {
             title: row.JOBTITLE,
             supervisorId: supervisorId,
             mail: row.email,
-            children: []
+            workemail: row.WORKEMAIL,
+            o365: row.o365,
+			children: []
         };
         
         // Find the root (no supervisor_id)
@@ -108,13 +110,17 @@ $(function() {
         'verticalLevel': 4,
         'pan': true,
         'createNode': function($node, data) {
-            var thisEmployee = employeeData.find(item => item.displayName == `${data.name}`);
-            var secondMenuIcon = $('<a>', {
-            'class': 'fa-solid fa-circle-info second-menu-icon',
-            'href': `https://us1.teamdynamix.com/tdapp/form/rotcmo?__cust=vccs&tdxusername=${data.mail}`,
-            'target': "detail"
-            });
-            $node.append(secondMenuIcon);
+			var secondMenu = `<div class="second-menu">
+								<ul class="button-list">
+									<li><a target="details" href="https://contacts.google.com/${data.mail}">Google</a></li>
+									<li><a target="details" href="https://us1.teamdynamix.com/tdapp/form/rotcmo?__cust=vccs&tdxusername=${data.mail}">TDX</a></li>
+									<li><a target="details" href="https://m365.cloud.microsoft/search/overview?form=delve&pp=${data.o365}%40fab6beb5-3604-42df-bddc-f4e9ddd654d5%7C${data.workemail}">O365</a></li>
+									</ul>
+								</div>`;
+            $node.append(secondMenu);
+			$node.hover(function() {
+				$(this).children('.second-menu').toggle();
+			});
         }
         });
     })
