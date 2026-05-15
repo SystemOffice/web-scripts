@@ -76,15 +76,17 @@ function processData(employeeData) {
 			}
 			childLevel--;
             // if a person has direct reports, sort so that managers appear before non-managers
-			// if (childLevel == 2){
-				node.children.sort((a, b) => {
-				    const aIsManager = a.className && a.className.includes('manager');
-				    const bIsManager = b.className && b.className.includes('manager');
-				
-				    // Sort managers (true/1) before non-managers (false/0)
-				    return bIsManager - aIsManager;
-				});
-			// }
+            node.children.sort((a, b) => {
+                    const aIsManager = a.className && a.className.includes('manager');
+                    const bIsManager = b.className && b.className.includes('manager');
+                
+                    // Sort managers (true/1) before non-managers (false/0)
+                    return bIsManager - aIsManager;
+                });
+            var childManagerCt = node.children.filter((item) => item.className && item.className.includes("manager")).length;
+            if (childManagerCt == 0) {
+                node.classList.add("vertical");
+            }
         }
 	}
 	walkPerson(root);
@@ -123,6 +125,8 @@ $(function() {
 			});
         }
         });
+        // add vertical class to any ul that follows a div and doesn't already have the class, to catch any nodes that should be vertical but weren't marked as such in the data
+        $('div.vertical + ul:not(.vertical)').addClass('vertical');
     })
     .always(function() {
         $('#chart-container').children('.spinner').remove();
