@@ -111,6 +111,7 @@ $(function() {
         'nodeContent': 'title',
         'verticalLevel': 4,
         'pan': true,
+        'zoom': true,
         'createNode': function($node, data) {
 			var secondMenu = `<div class="second-menu">
 								<ul class="button-list">
