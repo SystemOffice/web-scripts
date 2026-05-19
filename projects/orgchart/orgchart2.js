@@ -85,7 +85,7 @@ function processData(employeeData) {
                 });
             var childManagerCt = node.children.filter((item) => item.className && item.className.includes("manager")).length;
             if (childManagerCt == 0) {
-                node.classList.add("vertical");
+                node.className += " vertical";
             }
         }
 	}
