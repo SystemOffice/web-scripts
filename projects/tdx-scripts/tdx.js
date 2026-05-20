@@ -530,13 +530,37 @@ function isSandbox(){
     return false;
 }
 
+// this is designed to find the best match for a given path in a set of valid routes, by stripping segments from the end until it finds a match or runs out of segments
+function findMatchingPath(currentPath, matchTo) {
+  let segments = currentPath.split('/');
+
+  while (segments.length > 0) {
+	// Reconstruct the path with the current segments
+	const testPath = segments.join('/') || '/';
+	
+	const regex = new RegExp(matchTo, "gi");
+
+	// Check if it matches your valid routes (e.g., an array or a Set)
+	if (testPath.match(regex)) {
+	  return testPath;
+	}
+
+	// Remove the last segment and try again
+	segments.pop();
+  }
+  
+  return null; // No match found
+}
+
+// this is designed to add related KB articles to the ticket form based on the subject, by hitting the autocomplete endpoint with the subject text and adding any results to the page
 function addRelatedKBArticles(){
  // if (isSandbox()){
 
   var ticketSubjectID = 'attribute1303';
   if (document.getElementById(ticketSubjectID)){
+   const searchPath = findMatchingPath(document.location.pathname, "/portal$");
    document.getElementById(ticketSubjectID).onblur = function() {
-	$.get('../../Shared/AutocompleteSearch?componentStr=kb&searchText=' + $('#' + ticketSubjectID).val(),null,function(result) {
+	$.get(searchPath + '/Shared/AutocompleteSearch?componentStr=kb&searchText=' + $('#' + ticketSubjectID).val(),null,function(result) {
 		if (result.length > 0){
 			var html = result.map(item => "<a href=\"" + item.itemUrl + "\">" + item.title + "</a>").join("<br>");
 			html = "<div id=\"kbrelated\" class=\"p-2\" style=\"padding-bottom: 2em;\"><h3>Related Articles</h3>" + html + "</div>";
