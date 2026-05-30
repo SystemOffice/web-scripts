@@ -211,6 +211,13 @@
                         'recursive': subacctray.cfg.recursive,
                         'per_page': pp,
                         'page': p
+                    },    
+                    statusCode: {
+                        403: function(xhr) {
+                            console.error("Access denied: You do not have permission.");
+                            // Example: redirect to a login or error page
+                            get_sub_accounts_by_account();
+                        }
                     }
                 }).done(function(res, s, xhr) {
                     for (let i in res) {
@@ -233,22 +240,33 @@
                         fetch.resolve();
                     }
                 });
-            };
+
+           }
+
             // get_sub_accounts(p);
 			
 			// get accounts
-			genericFetch('/api/v1/accounts').then( 
-					function(data){ 
-						console.log(data);
-						let accounts = data.filter(account=>account.parent_account_id != null);
-						console.log(accounts);
-						for (const account of accounts){
-							console.log(account);
-							subacctray.root = account.id;
-							get_sub_accounts(p);
-						}
-					} );
-			
+            subacctray.root = "self";
+            get_sub_accounts(p);
+
+            let get_sub_accounts_by_account = () => {
+                genericFetch('/api/v1/accounts').then( 
+                        function(data){ 
+                            console.log(data);
+                            let accounts = data.filter(account=>account.parent_account_id != null);
+                            console.log(accounts);
+                            for (const account of accounts){
+                                console.log(account);
+                                subacctray.root = account.id;
+                                try {
+                                    get_sub_accounts(p);
+                                } catch (error) {
+                                    console.error("An error occurred:", error.message);
+                                }
+                            }
+                        } );
+            }
+
             // once we have all the sub accounts, sort and build the tree
             fetch.then(function() {
                 subacctray.stash(0,{});
