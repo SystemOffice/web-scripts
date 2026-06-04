@@ -703,7 +703,7 @@ function validateFormWithLibrary() {
 		}).catch(error => console.error('error loading validation library: ' + error));
     }
     else {
-        console.log('no required fields defined in JSON');
+        // console.log('no required fields defined in JSON');
         return;
     }
 
