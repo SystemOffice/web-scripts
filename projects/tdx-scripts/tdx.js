@@ -674,15 +674,28 @@ function prefilterLocationSearch(prefix){
 
 prefilterLocationSearch();
 
+function getCustomFormJSONObj(objID){
+	const customFormElements = document.querySelector('.formCustomElements');
+	if (customFormElements){
+		const formJSON = JSON.parse(customFormElements.innerText);
+		if (formJSON && formJSON[objID]){
+			return formJSON[objID];
+		}
+	}
+	return null;
+}
+
 // require specific values on specific form elements before submission
-function requireFormElementValues(idArr,formID){
+function requireFormElementValues(){
 	// Wait for DOM to be ready
+
 	$(document).ready(function() {
-		// Check if we're on the correct form page
-		// DT removed leading / so it will match in SB too, and switched to RegExp so you can use it on other forms
-		var formTest = new RegExp('TDClient/.*/NewForm\\\?ID=' + formID);
-		if (!window.location.href.match(formTest)) {
-			return; // Exit if we're not on the External Research Request form
+
+		let idArr = getCustomFormJSONObj("requiredIDArr");
+
+		if (idArr == null || idArr.length == 0){
+			// console.log('no required form elements defined');
+			return;
 		}
 
 		// Find the submit button
@@ -729,21 +742,28 @@ function requireFormElementValues(idArr,formID){
 	});
 }
 
-// this approach allows for reuse on other forms
-// this is for a VPCC form
-var idArr = [
-	{
-		"elemID": '146259',
-		"reqValue": 'Yes'
-	},
-	{
-		"elemID": '146260',
-		"reqValue": 'Yes'
-	},
-	{
-		"elemID": '146261',
-		"reqValue": 'Yes'
-	},
-];
-var formID = 'iOikqKQn0z8_';
-requireFormElementValues(idArr, formID);
+/*
+
+Embed a hidden div with a class of formCustomElements and a JSON string inside, to pass configuration to the script without needing to edit the script directly. For example:
+<div class="formCustomElements" style="display:none;">
+{
+	"requiredIDArr": [
+		{
+			"elemID": "146259",
+			"reqValue": "Yes"
+		},
+		{
+			"elemID": "146260",
+			"reqValue": "Yes"
+		},
+		{
+			"elemID": "146261",
+			"reqValue": "Yes"
+		}
+	]
+}
+</div>
+
+*/
+
+requireFormElementValues();
