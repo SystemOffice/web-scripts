@@ -4,28 +4,17 @@
  * Catches and logs parsing errors without throwing.
  */
 function parseQueryString() {
-    if (window.location.href.indexOf('?') == -1) {
-        return
-    }
-    var qs = window.location.href.split('?')[1];
-    try {
-        var item = qs.split('&');
-        var data = {};
-        for (var i = 0; i < item.length; i++) {
-            key = item[i].split('=')[0];
-            value = item[i].split('=')[1];
-            for (var x = 0; x < document.forms.length; x++) {
-                if (document.forms[x][key]) {
-                    document.forms[x][key].value = value;
-                }
+    const params = new URLSearchParams(window.location.search);
+    if (params.size === 0) return;
+    
+    params.forEach((value, key) => {
+        // URLSearchParams automatically decodes values
+        for (let form of document.forms) {
+            if (form[key]) {
+                form[key].value = decodeURIComponent(value);
             }
-            // data[key] = value;
         }
-    }
-    catch (err) {
-        console.log(err);
-    }
-    // return data;
+    });
 }
 parseQueryString();
 
@@ -146,7 +135,7 @@ checkImages();
  */
 function copyTableColumnToClipboard(table, columnIndex) {
     if (!table) {
-        console.error("Table with ID '" + tableId + "' not found.");
+        console.error("Table not found", table);
         return;
     }
 
@@ -678,27 +667,48 @@ function getCustomFormJSONObj(objID) {
     return null;
 }
 
+function getGlobalAttributeConstaints(objIn) {
+    const constraints = {
+        "attribute14516": {
+            "email": {
+				message: "doesn't look like a valid email"
+			}
+        }
+    };
+    const merged = { ...constraints, ...objIn };
+    return merged;
+}
+
 /**
  * Loads a validation library if constraints are defined in hidden JSON config and logs missing fields.
  * https://docs.google.com/document/d/1j-vmeSAZMQpAEwyAZQpfm6zC9iel6kjqlMnHoRCD1gc/edit?tab=t.0
  */
 function validateFormWithLibrary() {
 	// potentially merge with global object
-    var constraints = getCustomFormJSONObj("constraints");
-    if (constraints) {
-        console.log('required fields from JSON: ' + constraints);
-        loadScriptAsync('https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js').then(() => {
-			console.log('validation library loaded successfully');
+    const localConstraints = getCustomFormJSONObj("constraints");
+    const constraints = getGlobalAttributeConstaints(localConstraints);
+    const form = document.querySelector('form');
 
-			constraints.forEach(constraint => {
-				console.log(constraint);
-				let formElement = document.querySelector(`#attribute${constraint.id}`);
-				if (!formElement) {
-					console.log('form element with id ' + formElemID + ' not found');
-					return;
-				}
-				validate(formElement, constraints);
-			});
+    if (constraints && form) {
+        // console.log('required fields from JSON', constraints);
+        loadScriptAsync('https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js').then(() => {
+
+			// console.log('validation library loaded successfully');
+
+            // this probably needs to be onsubmit?
+            // or potentially on blur of each field to give more real-time feedback, 
+            // see https://validatejs.org/examples.html
+            $('form').on('submit', function (e) {
+                var errors = validate(form, constraints);
+                // then we update the form to reflect the results
+                // showErrors(form, errors || {});
+                if (errors) {
+                    console.log('form data is invalid, errors: ', errors);
+                    showErrors(errors);
+                    e.preventDefault();
+                    return false;
+                }
+            });
 
 		}).catch(error => console.error('error loading validation library: ' + error));
     }
@@ -706,13 +716,47 @@ function validateFormWithLibrary() {
         // console.log('no required fields defined in JSON');
         return;
     }
+}
 
+function showErrors(errors) {
+    //debugger;
+    errorFields = Object.keys(errors);
+    errorFields.forEach(field => {
+        var fieldEl = document.getElementById(field);
+        if (fieldEl) {
+            
+            fieldEl.classList.add('error');
+            // Create a new span element
+            const newSpan = document.createElement('span');
+            newSpan.id = field + "-error";
+
+            var errorMessage = errors[field][0];
+            const regex = new RegExp(field, "i"); 
+            const currValue = fieldEl.value || '';
+
+            newSpan.textContent = errorMessage;
+
+            newSpan.innerHTML = newSpan.innerHTML.replace(regex, "<strong>" + currValue + "</strong>");
+
+            // 3. create parent span element
+            const pSpan = document.createElement('span');
+            pSpan.setAttribute('class', 'field-validation-error');
+            pSpan.setAttribute('data-valmsg-for',field);
+            pSpan.setAttribute('data-valmsg-replace','true');
+            pSpan.appendChild(newSpan);
+
+            // 4. Insert it immediately after as a sibling
+            fieldEl.after(pSpan); 
+
+        }
+    });
 
 }
 
 /**
  * Requires specific select2 dropdown values before allowing the form to submit.
  * Disables the submit button until all required values match.
+ * Really should be superceded by the above validate.js implementation.
  */
 /*
 
