@@ -679,6 +679,47 @@ function getGlobalAttributeConstaints(objIn) {
     return merged;
 }
 
+// example of how we can use the above function to add attributes to elements, such as type="email" for built-in validation, 
+// where TDX does not support it natively. This is a bit of a hack but allows for more flexible form configurations 
+// without needing to edit the script directly for each new attribute or field. 
+// We can define custom attributes in the hidden JSON config and they will be applied on page load.
+// this is not just about forms, but any identifiable element by ID, so it could be used for other purposes as well, 
+// such as adding data- attributes for custom JS functionality, etc.
+function getGlobalAttributes(objIn) {
+    const customAttributes = {
+        "attribute14516": {
+            "type": "email"
+        },
+        "attribute14513": {
+            "type": "tel"
+        }
+    };
+    const merged = { ...customAttributes, ...objIn };
+    return merged;
+}
+
+// This function reads custom attributes from a hidden JSON config and applies them to form elements by ID.
+// For example, it can set the type="email" attribute on an input to trigger built-in HTML5 validation.
+// Or min, max, range, pattern, or any other attribute supported by the element, where it is not supported by TDX.
+function addElementAttributes() {
+    const customAttributes = getCustomFormJSONObj("customAttributes");
+    const globalAttributes = getGlobalAttributes(customAttributes);
+    const form = document.querySelector('form');
+    if (globalAttributes && form) {
+        Object.keys(globalAttributes).forEach(function (key) {
+            var element = document.getElementById(key);
+            if (element) {
+                var attributes = globalAttributes[key];
+                Object.keys(attributes).forEach(function (attrKey) {
+                    element.setAttribute(attrKey, attributes[attrKey]);
+                });
+            }
+        });
+    }
+}
+
+
+
 /**
  * Loads a validation library if constraints are defined in hidden JSON config and logs missing fields.
  * https://docs.google.com/document/d/1j-vmeSAZMQpAEwyAZQpfm6zC9iel6kjqlMnHoRCD1gc/edit?tab=t.0
@@ -827,4 +868,5 @@ function requireFormElementValues() {
 $(document).ready(function () {
     requireFormElementValues();
     validateFormWithLibrary();
+    addElementAttributes();
 });
