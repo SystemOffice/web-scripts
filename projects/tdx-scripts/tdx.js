@@ -692,6 +692,9 @@ function getGlobalAttributes(objIn) {
         },
         "attribute14513": {
             "type": "tel"
+        },
+        "attribute11849": {
+            "pattern": "[0-9]{7}",
         }
     };
     const merged = { ...customAttributes, ...objIn };
