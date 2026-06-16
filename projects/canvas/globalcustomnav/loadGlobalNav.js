@@ -5,7 +5,7 @@
  * @param {boolean} async - Whether to load asynchronously.
  * @param {Object} attributes - Optional extra attributes to set.
  * @returns {Promise<HTMLElement>} Resolves with the created DOM element.
- * exists in calling .js file
+ * exists in calling .js file, but proof of concept
  */
 /* function dynamicallyLoadScript(url, type = 'script', async = true, attributes = {}) {
   return new Promise((resolve, reject) => {
@@ -88,6 +88,9 @@ function initGlobalNav() {
         ],
       });
 
+    const globalCustomNav_items = [];
+
+    const globalCustomNav_tray_throwback = {};
     // throwback for admin tray - sub account navigation
     globalCustomNav_tray_throwback.accounts = {
       target: 'a[href="/accounts"]',
@@ -120,7 +123,7 @@ function initGlobalNav() {
     };
 
   const globalCustomNav_opts = {
-    // nav_items: globalCustomNav_items,
+    nav_items: globalCustomNav_items,
     throwbacks: globalCustomNav_tray_throwback
   };
   // load custom nav options

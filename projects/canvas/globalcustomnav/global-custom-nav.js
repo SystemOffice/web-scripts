@@ -5,10 +5,7 @@
 //
 **/
 
-(function () {
-  'use strict';
 
-  // continue if curious
   const globalCustomNav = {  
     cfg: {
       context_item: '',
@@ -790,6 +787,3 @@
     }
   };
 
-
-
-})();
