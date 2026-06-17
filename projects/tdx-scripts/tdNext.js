@@ -46,8 +46,8 @@ function addToMyWorkButton(doc) {
         const navEl = doc.getElementById('divTabHeader');
         if (!navEl) return;
 
-        const myWorkBtn = doc.querySelector('button#btnAddToMyWorkCustom');
-        if (myWorkBtn) return; // Prevent duplicate insertion 
+        const myWorkBtnCustom = doc.querySelector('button#btnAddToMyWorkCustom');
+        if (myWorkBtnCustom) return; // Prevent duplicate insertion 
     
         const ticketButtons = navEl.querySelectorAll('li button');
         if (ticketButtons.length === 0) return; // Safety check
