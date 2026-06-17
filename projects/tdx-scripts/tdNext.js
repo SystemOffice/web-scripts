@@ -45,6 +45,9 @@ function addToMyWorkButton(doc) {
 
         const navEl = doc.getElementById('divTabHeader');
         if (!navEl) return;
+
+        const myWorkBtn = doc.querySelector('button#btnAddToMyWorkCustom');
+        if (myWorkBtn) return; // Prevent duplicate insertion 
     
         const ticketButtons = navEl.querySelectorAll('li button');
         if (ticketButtons.length === 0) return; // Safety check
@@ -52,7 +55,7 @@ function addToMyWorkButton(doc) {
         
         const newItem = doc.createElement('li');
         newItem.innerHTML = `
-            <button type="button" class="btn btn-primary btn-sm" title="Add to My Work">
+            <button type="button" id="btnAddToMyWorkCustom" class="btn btn-primary btn-sm" title="Add to My Work">
                 <span class="fa-solid fa-plus fa-nopad" aria-hidden="true"></span>
                 <span class="hidden-xs padding-left-xs">Add to My Work</span>
             </button>`;
@@ -82,7 +85,10 @@ function addClientLink(doc) {
 	if (!navEl || navEl.dataset.clientLinkAdded) return;
 
 	const printBtn = navEl.querySelector('li button[title="Print View"]');
-	if (printBtn) {
+    // a bit redundant, but good for safety
+	const clientBtn = navEl.querySelector('li button[title="Client View"]');
+
+	if (printBtn && !clientBtn) {
 		const pathParts = doc.location.pathname.split('/');
 		const thisapp = pathParts[3];
 		
@@ -97,7 +103,7 @@ function addClientLink(doc) {
 		// const newItem = penUltimatListItem.cloneNode(true);
 		
 		const newItem = doc.createElement('li');
-		newItem.innerHTML = `<button type="button" class="btn btn-primary btn-sm"  title="Client View">
+		newItem.innerHTML = `<button type="button" id="btnClientViewCustom" class="btn btn-primary btn-sm"  title="Client View">
           <span class="fa-solid fa-arrow-up-right-from-square fa-nopad" aria-hidden="true"></span><span class="hidden-xs padding-left-xs">Client View</span>
         </button>`;
 		
