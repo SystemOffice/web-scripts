@@ -1,3 +1,5 @@
+// enscapsulate portal observer and orchestration
+
 /**
 // @name        CanvasLMS - Global Custom Navigation
 // @namespace   https://github.com/robert-carroll/canvaslms-global-custom-navigation
@@ -6,17 +8,18 @@
 **/
 
 
+  // continue if curious
   const globalCustomNav = {  
     cfg: {
       context_item: '',
+      keeper: null,
       glbl: {
         nav_selector: '#menu',
         tray_portal: '#nav-tray-portal',
         tray_container: 'navigation-tray-container',
         space: 'tray-with-space-for-global-nav',
         menuItemClass: `ic-app-header__menu-list-item`,
-        trayActiveClass: `ic-app-header__menu-list-item--active`,
-        keeper: null
+        trayActiveClass: `ic-app-header__menu-list-item--active`
       },
       rspv: {
         tray_portal: 'div[role="dialog"]:has(.ic-brand-mobile-global-nav-logo) ul',
@@ -24,8 +27,7 @@
         INSTUI_aodown: `<svg name="IconArrowOpenDown" viewBox="0 0 1920 1920" rotate="0" style="width: 1em; height: 1em;" 
         width="1em" height="1em" aria-hidden="true" role="presentation" focusable="false" class="gcn-tray-rspv-aodown">
         <g role="presentation"><path d="M568.129648 0.0124561278L392 176.142104 1175.86412 960.130789 392 1743.87035 568.129648 1920 1528.24798 960.130789z" 
-        fill-rule="evenodd" stroke="none" stroke-width="1" transform="matrix(0 1 1 0 .067 -.067)"></path></g></svg>`,
-        keeper: null
+        fill-rule="evenodd" stroke="none" stroke-width="1" transform="matrix(0 1 1 0 .067 -.067)"></path></g></svg>`
       },
       targets: ['_self', '_blank', '_parent', '_top']
     },
@@ -33,7 +35,6 @@
       if (!document.querySelector(globalCustomNav.cfg.glbl.nav_selector) && !document.querySelector(globalCustomNav.cfg.rspv.tray_portal)) return;
 
       if (document.querySelector(globalCustomNav.cfg.glbl.nav_selector)) {
-
         // get the left-to-right or right-to-left direction
         globalCustomNav.dir = document.querySelector('html').getAttribute('dir') ?? 'ltr';
         // accept nav items, or default to empty
@@ -50,158 +51,197 @@
         // update the glbl menu with custom nav items
         globalCustomNav.prepare_nav_items(globalCustomNav.nav_items, false);
       }
-      globalCustomNav.detect_glbl_portal();
-      globalCustomNav.detect_rspv_portal();
+      globalCustomNav.menu.portals.detect();
       globalCustomNav.tray_handler();
     },
-    // the responsive menu monitors the same physical UI space for two distinct phases...
-    // one for the top level nav 'portal' (the space), and one for the second level 'tray' (the menu)
-    detect_rspv_portal: (mtx) => {
-      // if we have mtx, check if the portal is injected
-      if (mtx) {
-        let portal_detected = false;
-        for (const mutation of mtx) {
-          for (const node of mutation.addedNodes) {
-            // check if the added node is an element and if it matches or contains the portal
-            if (node.nodeType === 1) {
-              if (node.matches(globalCustomNav.cfg.rspv.tray_portal) || node.querySelector(globalCustomNav.cfg.rspv.tray_portal)) {
-                portal_detected = true;
-                break;
+    menu: {
+      portals: {
+        detect: () => {
+          // a single observer watches the body for both the responsive menu injection and global tray portal
+          if (!globalCustomNav.cfg.keeper) {
+            globalCustomNav.cfg.keeper = new MutationObserver(globalCustomNav.menu.portals.watch);
+            globalCustomNav.cfg.keeper.observe(document.body, { childList: true, subtree: true });
+            
+            // attach secondary observer config strictly for the global menu's class changes
+            const glbl_nav = document.querySelector(globalCustomNav.cfg.glbl.nav_selector);
+            if (glbl_nav) {
+              globalCustomNav.cfg.keeper.observe(glbl_nav, { attributes: true, attributeFilter: ['class'], subtree: true });
+            }
+          }
+          
+          // fire once manually to set initial global active states
+          globalCustomNav.menu.portals.watch(); 
+        },
+        watch: (mtx = []) => {
+          const glbl_portal = document.querySelector(globalCustomNav.cfg.glbl.tray_portal);
+          globalCustomNav.menu.glbl.ensure_active_class.sync(mtx, glbl_portal);
+
+          // route to global portal processing if relevant
+          if (glbl_portal) {
+            const check_glbl = mtx.length === 0 || mtx.some(m => {
+              let el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+              return el && el.closest(globalCustomNav.cfg.glbl.tray_portal);
+            });
+            const portal_ready = glbl_portal.classList.contains('glbl-global-custom-nav');
+
+            // only process if mutations happened in the portal or if it hasn't been initialized yet
+            if (check_glbl || !portal_ready) {
+              globalCustomNav.menu.glbl.on_mtx(mtx, glbl_portal, portal_ready);
+            }
+          }
+
+          // route to responsive portal processing if new nodes were added
+          const has_new_nodes = mtx.length === 0 || mtx.some(m => m.addedNodes.length > 0);
+          if (has_new_nodes) {
+            const rspv_portal = document.querySelector(globalCustomNav.cfg.rspv.tray_portal);
+            if (rspv_portal) {
+              globalCustomNav.menu.rspv.on_mtx(rspv_portal);
+            }
+          }
+        }
+      },
+      glbl: {
+        on_mtx: (mtx, glbl_portal, portal_ready) => {
+          // fire once when portal is first discovered
+          if (!portal_ready) {
+            glbl_portal.classList.add('glbl-global-custom-nav');
+            // set active class here prevents default from taking it back
+            // also reduces visual swap between default and custom item when closing a native tray
+            globalCustomNav.menu.glbl.ensure_active_class.set();
+          }
+
+          // watch for tray container, handle throwbacks
+          const glbl_tray_container = glbl_portal.querySelector(`div.${globalCustomNav.cfg.glbl.tray_container}`);
+          if (glbl_tray_container) {
+            // get the current open tray slug
+            let ui_tray = [...glbl_tray_container.classList].find(c => c.endsWith('-tray'));
+            if (ui_tray) {
+              ui_tray = ui_tray.replace('-tray', '');
+              globalCustomNav.menu.glbl.ensure_active_class.set(`global_nav_${ui_tray}_link`);
+              
+            // call throwbacks only if supported AND new nodes were actually injected
+              if (typeof globalCustomNav.glbl_tray_throwback === 'function') {
+                globalCustomNav.glbl_tray_throwback();
+              }
+            }
+          } else if (glbl_portal.children.length === 0) {
+            // reset context on tray removal
+            // guard against resetting if unrelated deep dom elements were removed while tray is closed
+            let portal_cleared = mtx.some(m => m.target === glbl_portal && m.removedNodes.length > 0);
+            if (portal_cleared) {
+              const expected_id = globalCustomNav.cfg.context_item;
+              const is_context_custom = globalCustomNav.nav_items.some(i => i.slug === expected_id);
+
+              if (is_context_custom) {
+                // override default activeClass
+                globalCustomNav.menu.glbl.ensure_active_class.set(expected_id);
+              } else {
+                // if context is native, let canvas handle, unless a custom item is stuck on
+                const current_active = document.querySelector(`${globalCustomNav.cfg.glbl.nav_selector} li.${globalCustomNav.cfg.glbl.trayActiveClass} a`);
+                const is_current_custom = current_active && current_active.id && globalCustomNav.nav_items.some(i => i.slug === current_active.id);
+                
+                if (!current_active || is_current_custom) {
+                  globalCustomNav.menu.glbl.ensure_active_class.set();
+                }
               }
             }
           }
-          if (portal_detected) break;
-        }
-        
-        // mtx happened but the portal wasn't included, ignore and keep watching
-        if (!portal_detected && !document.querySelector(globalCustomNav.cfg.rspv.tray_portal)) {
-          return; 
-        }
-      }
+        },
+        ensure_active_class: {
+          set: (context_item = globalCustomNav.cfg.context_item) => {
+            const active_class = globalCustomNav.cfg.glbl.trayActiveClass;
+            const target_item = document.getElementById(context_item) || document.getElementById(globalCustomNav.cfg.context_item);
+            const target_li = target_item ? target_item.closest('li') : null;
 
-      // check for the portal and customization state
-      const portal = document.querySelector(globalCustomNav.cfg.rspv.tray_portal);
-      const tray_portal_complete = document.querySelector('div.rspv-global-custom-nav');
+            // clear existing active classes and aria attributes to prevent duplicates
+            document.querySelectorAll(`${globalCustomNav.cfg.glbl.nav_selector} li.${active_class}`).forEach(el => {
+              if (el !== target_li) {
+                el.classList.remove(active_class);
+                el.removeAttribute('aria-current');
+              }
+            });
 
-      // there is no portal, start observer
-      if (!portal) {
-        if (!globalCustomNav.cfg.rspv.keeper) {
-          // store the observer in the keeper, prevent stacking and utilize hand off
-          // subtree ensures items are added responsive menu opens
-          globalCustomNav.cfg.rspv.keeper = new MutationObserver(globalCustomNav.detect_rspv_portal);
-          globalCustomNav.cfg.rspv.keeper.observe(document.body, { childList: true, subtree: true });
-        }
-        return;
-      }
-      
-      // portal exists, menu is not yet customized
-      if (portal != null && !tray_portal_complete) {
-        // handoff, stop observing the body once the portal is found
-        if (globalCustomNav.cfg.rspv.keeper) {
-          globalCustomNav.cfg.rspv.keeper.disconnect();
-          globalCustomNav.cfg.rspv.keeper = null;
-        }
-        
-        // add custom menu items
-        globalCustomNav.prepare_nav_items(globalCustomNav.nav_items, true);
-        // mark it complete
-        document.querySelector(globalCustomNav.cfg.rspv.tray_container).classList.add('rspv-global-custom-nav');
-        
-        // handoff for tray functionality
-        globalCustomNav.cfg.rspv.keeper = new MutationObserver(globalCustomNav.watch_rspv_portal);
-        globalCustomNav.cfg.rspv.keeper.observe(document.body, { childList: true, subtree: true });
-      }
-    },
-    watch_rspv_portal: (mtx) => {
-      // check for tray portal, handle throwbacks
-      const tray_portal_open = document.querySelector(globalCustomNav.cfg.rspv.tray_portal);
-      // ensure the tray portal is open
-      if (tray_portal_open) {
-        // only run throwback if new elements were actually injected into the DOM
-        const has_new_nodes = mtx && mtx.some(mutation => mutation.addedNodes.length > 0);
-        if (has_new_nodes) {
-          // second level nav tray is open, handle throwbacks
-          globalCustomNav.rspv_tray_throwback();
-        }
-        return;
-      }
-      
-      // when the portal is not open, handoff back to the portal watcher
-      if (!tray_portal_open) {
-        if (globalCustomNav.cfg.rspv.keeper) {
-          globalCustomNav.cfg.rspv.keeper.disconnect();
-          globalCustomNav.cfg.rspv.keeper = null;
-        }
-        globalCustomNav.detect_rspv_portal();
-      }
-    },
-    // waits for and finds the global nav tray portal and then hands observation off to watch_glbl_portal
-    detect_glbl_portal: () => {
-      const portal = document.querySelector(globalCustomNav.cfg.glbl.tray_portal);
-      if (!portal) {
-        if (!globalCustomNav.cfg.glbl.keeper) {
-          // essential for theme and userscript use, vs just pasting it into the browser console
-          // nav portal doesn't immedately exist when JS is loaded, but it persists once created
-          globalCustomNav.cfg.glbl.keeper = new MutationObserver(globalCustomNav.detect_glbl_portal);
-          globalCustomNav.cfg.glbl.keeper.observe(document.body, { childList: true });
-        }
-        return;
-      }
-  
-      // maintain a single active observer
-      if (globalCustomNav.cfg.glbl.keeper) {
-        globalCustomNav.cfg.glbl.keeper.disconnect();
-      }
-      
-      // set active class here prevents default from taking it back
-      // also reduces visual swap between default and custom item when closing a native tray
-      globalCustomNav.glbl_ensure_active_class();
-      //
+            // add to target ONLY if it is missing the class
+            // and prevent MutationObserver infinite loops
+            if (target_li && !target_li.classList.contains(active_class)) {
+              target_li.classList.add(active_class);
+              target_li.setAttribute('aria-current', 'page');
+            }
+          },
+          sync: (mtx, glbl_portal) => {
+            // catch native react router attempting to override the active state
+            const class_mtx = mtx.some(m => m.type === 'attributes' && m.attributeName === 'class' && m.target.closest('li'));
+            if (class_mtx) {
+              const custom_tray = document.querySelector('.gcn-instui-tray');
+              const native_tray_open = glbl_portal && glbl_portal.children.length > 0 && !custom_tray;
 
-      // keep on keeping on (watch again)
-      globalCustomNav.cfg.glbl.keeper = new MutationObserver(globalCustomNav.watch_glbl_portal);
-      globalCustomNav.cfg.glbl.keeper.observe(portal, { childList: true, subtree: true });
-    },
-    watch_glbl_portal: (mtx) => {
-      // watch for tray container, handle throwbacks
-      const portal = document.querySelector(globalCustomNav.cfg.glbl.tray_portal);
-      // detect the tray container
-      const tray_container_open = document.querySelector(`${globalCustomNav.cfg.glbl.tray_portal} div.${globalCustomNav.cfg.glbl.tray_container}`);
+              if (custom_tray) {
+                const is_exiting = custom_tray.className.includes('-exiting');
+                const tray_slug = custom_tray.parentElement.id.replace('-tray', '');
 
-      if (tray_container_open) {
-        // get the current open tray slug
-        let ui_tray = [...tray_container_open.classList].find(c => c.endsWith('-tray'))?.replace('-tray', '');
-        if (ui_tray) {
-          globalCustomNav.glbl_ensure_active_class(`global_nav_${ui_tray}_link`);
-
-          // call throwbacks
-          globalCustomNav.glbl_tray_throwback();
+                if (!is_exiting) {
+                  // custom tray is actively opening or fully open, maintain activeClass
+                  globalCustomNav.menu.glbl.ensure_active_class.set(tray_slug);
+                } else {
+                  // custom tray is actively closing. react might try to steal the class early
+                  // if custom context is current, maintain it, otherwise let canvas handle it
+                  const expected_id = globalCustomNav.cfg.context_item;
+                  const is_context_custom = globalCustomNav.nav_items.some(i => i.slug === expected_id);
+                  if (is_context_custom) {
+                    globalCustomNav.menu.glbl.ensure_active_class.set(expected_id);
+                  }
+                }
+              } else if (native_tray_open) {
+                // native tray is currently open or animating closed
+                const expected_id = globalCustomNav.cfg.context_item;
+                const is_context_custom = globalCustomNav.nav_items.some(i => i.slug === expected_id);
+                
+                if (is_context_custom) {
+                  // check if react is trying to revert the class early while the tray animates closed
+                  const glbl_tray_containers = glbl_portal.querySelectorAll(`div.${globalCustomNav.cfg.glbl.tray_container}`);
+                  const active_container = glbl_tray_containers[glbl_tray_containers.length - 1];
+                  let ui_tray = active_container ? [...active_container.classList].find(c => c.endsWith('-tray')) : null;
+                  
+                  if (ui_tray) {
+                    let expected_native_id = `global_nav_${ui_tray.replace('-tray', '')}_link`;
+                    const current_active = document.querySelector(`${globalCustomNav.cfg.glbl.nav_selector} li.${globalCustomNav.cfg.glbl.trayActiveClass} a`);
+                    
+                    // if the newly highlighted item doesn't match the tray, react is falling back, intercept it
+                    if (current_active && current_active.id !== expected_native_id) {
+                      globalCustomNav.menu.glbl.ensure_active_class.set(expected_id);
+                    }
+                  }
+                }
+              } else if (!native_tray_open) {
+                // no tray is actively open (portal is empty), maintain custom context
+                const expected_id = globalCustomNav.cfg.context_item;
+                const is_context_custom = globalCustomNav.nav_items.some(i => i.slug === expected_id);
+                
+                if (is_context_custom) {
+                  globalCustomNav.menu.glbl.ensure_active_class.set(expected_id);
+                }
+              }
+            }
+          }
         }
-      }
-
-      mtx.forEach(mutation => {
-        if (mutation.removedNodes.length > 0 && portal.children.length === 0) {
-          // reset context on tray removal
-          globalCustomNav.glbl_ensure_active_class();
-        }
-      });
-    },
-    glbl_ensure_active_class: (context_item = globalCustomNav.cfg.context_item) => {
-      // clear existing active classes and aria attributes to prevent duplicates
-      document.querySelectorAll(`.${globalCustomNav.cfg.glbl.trayActiveClass}`).forEach(el => {
-        el.classList.remove(globalCustomNav.cfg.glbl.trayActiveClass);
-        el.removeAttribute('aria-current');
-      });
-
-      // attempt to find the requested item, fallback to the default context item
-      const nav_item = document.getElementById(context_item) || document.getElementById(globalCustomNav.cfg.context_item);
-
-      if (nav_item) {
-        // safely apply the active class and aria-current to the parent <li>
-        const nav_li = nav_item.closest('li');
-        if (nav_li) {
-          nav_li.classList.add(globalCustomNav.cfg.glbl.trayActiveClass);
-          nav_li.setAttribute('aria-current', 'page');
+      },
+      rspv: {
+        on_mtx: (rspv_portal) => {
+          // tag the physical portal (ul) to avoid null misses on deep react renders
+          const rspv_tray_portal_complete = rspv_portal.classList.contains('rspv-global-custom-nav');
+          
+          // portal exists, menu is not yet customized
+          if (!rspv_tray_portal_complete) {
+            // add custom menu items
+            globalCustomNav.prepare_nav_items(globalCustomNav.nav_items, true);
+            // mark it complete
+            rspv_portal.classList.add('rspv-global-custom-nav');
+          } else {
+            // hamburger menu is customized and open. call throwbacks if they are supported
+            if (typeof globalCustomNav.rspv_tray_throwback === 'function') {
+              globalCustomNav.rspv_tray_throwback();
+            }
+          }
         }
       }
     },
@@ -317,18 +357,15 @@
     append_item: (item, hamb = true) => {
       const target_ul = hamb ? globalCustomNav.cfg.rspv.tray_portal : globalCustomNav.cfg.glbl.nav_selector;
       const target_li = document.querySelector(`${target_ul} li:last-child`);
-      const position_sel = (hamb == true ? globalCustomNav.cfg.rspv.tray_portal : globalCustomNav.cfg.glbl.nav_selector) + ` > li:nth-of-type(${item.position})`;
-      // nav item placement by position
-      if (typeof item.position === 'number' && document.querySelector(position_sel)) {
-					document.querySelector(position_sel).after(item.icon);
+      const target_el = typeof item.position === 'number' ? document.querySelector(`${target_ul} > li:nth-of-type(${item.position})`) : null;
+
+      if (item.position === 'after') {
+        target_li.after(item.icon);
+      } else if (target_el) {
+        target_el.after(item.icon);
       } else {
-        if (item.position == 'after') {
-          target_li.after(item.icon);
-        } else {
-          // default to before the last child (usually Help)
-          // unless, visually other items are added after current is placed
-          target_li.before(item.icon);
-        }
+        // default fallback for 'before', missing position, invalid strings, or out-of-bounds numbers
+        target_li.before(item.icon);
       }
 
       // check if the current window path matches the item's href
@@ -339,7 +376,7 @@
           globalCustomNav.cfg.context_item = item.slug;
           // set active class when the icon is added
           // reduces visual swap between default to custom
-           globalCustomNav.glbl_ensure_active_class();
+          globalCustomNav.menu.glbl.ensure_active_class.set();
         }
       }
     },
@@ -465,8 +502,14 @@
     tray_handler: () => {
 
       const glbl_tray_close = (slug, restore_focus = true) => {
-        const open_tray = document.querySelector('.gcn-instui-tray');
-        if (!open_tray || !open_tray.classList.contains('gcn-instui-tray')) return;
+        const tray_wrapper = document.getElementById(`${slug}-tray`);
+        if (!tray_wrapper) return;
+        
+        const open_tray = tray_wrapper.querySelector('.gcn-instui-tray');
+        const direction = globalCustomNav.dir == 'ltr' ? 'left' : 'right';
+
+        // prevent stacking animations if tray is already closing
+        if (!open_tray || open_tray.classList.contains(`gcn-instui-tray-slide-${direction}-exiting`)) return;
 
         // restore focus on nav item when tray closes
         if (restore_focus) {
@@ -478,11 +521,10 @@
         }
        
         // trigger tray slide on close
-        const direction = globalCustomNav.dir == 'ltr' ? 'left' : 'right';
         // re-add the transition so it animates the departure
         open_tray.classList.add(`gcn-instui-tray-slide-${direction}-transitioning`);
         // use a single requestAnimationFrame to ensure the browser registers
-        // the transition class BEFORE we change the physical location.
+        // the transition class BEFORE we change the physical location
         requestAnimationFrame(() => {
           // swap the resting state to the exiting state (moves it off-screen)
           open_tray.classList.replace(`gcn-instui-tray-slide-${direction}-entered`, `gcn-instui-tray-slide-${direction}-exiting`);
@@ -492,7 +534,7 @@
             open_tray.classList.replace(`gcn-instui-tray-slide-${direction}-exiting`, `gcn-instui-tray-slide-${direction}-exited`);
             open_tray.classList.remove(`gcn-instui-tray-slide-${direction}-transitioning`);
             // cleanup: remove it from the DOM
-            document.getElementById(`${slug}-tray`)?.remove();
+            tray_wrapper.remove();
           }, 300);
         });
       };
@@ -578,7 +620,7 @@
             }
           }
         }
-      });
+      }, true);
 
       // close tray with escape key when the tray is open
       document.addEventListener('keydown', (e) => {
@@ -598,14 +640,16 @@
         global_nav.addEventListener('focus', (e) => {
           const open_tray = document.querySelector('.gcn-instui-tray');
           if (open_tray) {
-            const target_li = e.target.closest('li');
+            const target_anchor = e.target.closest('a');
+            const is_custom = target_anchor && target_anchor.id && globalCustomNav.nav_items.some(i => i.slug === target_anchor.id);
+
             // if the focused element is a native nav item (lacks a custom id) 
             // and a custom tray is actively open, intercept it
-            if (target_li && !target_li.hasAttribute('id') && typeof e.target.blur === 'function') {
+            if (target_anchor && !is_custom && typeof e.target.blur === 'function') {
               // clear focus from native item
               e.target.blur();
               // redirect focus back to our custom tray's close button
-              const close_btn = document.querySelector('.gcn-tray-close-btn');
+              const close_btn = document.querySelector('.gcn-instui-tray [class$="-closeButton"] button');
               if (close_btn) close_btn.focus();
             }
           }
@@ -746,44 +790,46 @@
       }
     },
     glbl_tray_throwback: () => {
-      if (typeof globalCustomNav.throwbacks === 'undefined') return;
+      const throwbacks = globalCustomNav.throwbacks;
+      if (!throwbacks || Object.keys(throwbacks).length === 0) return;
 
       const tray_container = document.querySelector(`${globalCustomNav.cfg.glbl.tray_portal} div.${globalCustomNav.cfg.glbl.tray_container}`);
-      let ui_tray = [...tray_container.classList].filter(c => c.endsWith('-tray'))[0].replace('-tray', '');
-      if (typeof globalCustomNav.throwbacks[ui_tray] === 'object') {
-        let tray_ready = document.querySelector(`${globalCustomNav.cfg.glbl.tray_portal} ${globalCustomNav.throwbacks[ui_tray].target}`);
-        let tray_action_complete = document.querySelectorAll(`${globalCustomNav.cfg.glbl.tray_portal} a.${globalCustomNav.throwbacks[ui_tray].actions.complete}`);
-        if (tray_ready && tray_action_complete.length == 0) {
-          globalCustomNav.throwbacks[ui_tray].actions.glbl();
+      if (!tray_container) return;
+
+      // extract the tray slug (e.g., 'accounts', 'courses') from the container's classes
+      let ui_tray = [...tray_container.classList].find(c => c.endsWith('-tray'))?.replace('-tray', '');
+      if (ui_tray && typeof throwbacks[ui_tray] === 'object') {
+        let tb = throwbacks[ui_tray];
+        let tray_ready = document.querySelector(`${globalCustomNav.cfg.glbl.tray_portal} ${tb.target}`);
+        let tray_action_complete = document.querySelector(`${globalCustomNav.cfg.glbl.tray_portal} a.${tb.actions.complete}`);
+        if (tray_ready && !tray_action_complete && typeof tb.actions.glbl === 'function') {
+          tb.actions.glbl();
         }
       }
     },
     rspv_tray_throwback: () => {
-      if (typeof globalCustomNav.throwbacks === 'undefined') return;
+      const throwbacks = globalCustomNav.throwbacks;
+      if (!throwbacks || Object.keys(throwbacks).length === 0) return;
 
-      const portal = document.querySelector(globalCustomNav.cfg.rspv.tray_portal);
-      if (portal && Object.keys(globalCustomNav.throwbacks).length >= 1) {
-        // TODO frequently review for catchment class or attribute
-        let expanded = document.querySelectorAll(`button[aria-controls^="Expandable"][aria-expanded="true"]`);
-        let to_targets = Object.keys(globalCustomNav.throwbacks).map(t => [globalCustomNav.throwbacks[t].target, t]);
-        let to_mapping = Object.fromEntries(to_targets);
-        let targets = Object.keys(to_mapping);
+      const rspv_portal = document.querySelector(globalCustomNav.cfg.rspv.tray_portal);
+      if (!rspv_portal) return;
 
-        if (expanded) {
-          targets.forEach(t => {
-            let tray_ready = document.querySelector(`div[id^="Expandable"] ${t}`);
-            if (tray_ready) {
-              let tray_by_target = to_mapping[t];
-              if (typeof globalCustomNav.throwbacks[tray_by_target] === 'object') {
-                let tray_action_complete = document.querySelectorAll(`div[id^="Expandable"] a.${globalCustomNav.throwbacks[tray_by_target].actions.complete}`);
-                if (tray_action_complete.length == 0) {
-                  globalCustomNav.throwbacks[tray_by_target].actions.rspv();
-                }
-              }
+      // find currently expanded accordions in the responsive menu
+      let expanded = document.querySelectorAll(`button[aria-controls^="Expandable"][aria-expanded="true"]`);
+      if (expanded.length > 0) {
+        // iterate through all configured throwbacks and apply to open tray
+        Object.keys(throwbacks).forEach(key => {
+          let tb = throwbacks[key];
+          let tray_ready = document.querySelector(`div[id^="Expandable"] ${tb.target}`);
+          if (tray_ready) {
+            let tray_action_complete = document.querySelector(`div[id^="Expandable"] a.${tb.actions.complete}`);
+            if (!tray_action_complete && typeof tb.actions.rspv === 'function') {
+              tb.actions.rspv();
             }
-          })
-        }
+          }
+        });
       }
     }
   };
+
 
