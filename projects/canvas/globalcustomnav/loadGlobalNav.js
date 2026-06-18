@@ -1,132 +1,143 @@
 /**
- * Dynamically loads a script or stylesheet if it doesn't already exist.
- * @param {string} url - The source URL.
- * @param {string} type - 'script' or 'link'.
- * @param {boolean} async - Whether to load asynchronously.
- * @param {Object} attributes - Optional extra attributes to set.
- * @returns {Promise<HTMLElement>} Resolves with the created DOM element.
- * exists in calling .js file, but proof of concept
- */
-/* function dynamicallyLoadScript(url, type = 'script', async = true, attributes = {}) {
-  return new Promise((resolve, reject) => {
-    // 1. Check if the resource is already in the DOM
-    const selector = type === 'link' ? `link[href="${url}"]` : `script[src="${url}"]`;
-    const existingElement = document.querySelector(selector);
-    
-    if (existingElement) {
-      console.warn(`Resource already loaded: ${url}`);
-      return resolve(existingElement); // Resolve immediately if already present
-    }
+// @name        CanvasLMS - Global Custom Navigation Loader
+// @description Safely loads GCN files and manually bridges isolated throwback scripts like Subaccount Nav.
+**/
 
-    // 2. Create the element
-    const element = document.createElement(type);
+(async function () {
+  'use strict';
 
-    // 3. Setup event listeners before attaching to the DOM or setting sources
-    element.onload = () => resolve(element);
-    element.onerror = () => reject(new Error(`Failed to load resource: ${url}`));
-
-    // 4. Configure based on type
-    if (type === 'link') {
-      element.rel = 'stylesheet';
-      element.href = url;
-    } else {
-      element.src = url;
-      element.async = async;
-    }
-
-    // 5. Apply any additional attributes (merging event handlers safely)
-    Object.assign(element, attributes);
-
-    // 6. Append to trigger the network request
-    document.head.appendChild(element);
-  });
-}
- */
-
-async function loadGlobalNavLibrary() {
-  try {
-    const baseurl = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/canvas/globalcustomnav/';
-
-    // try this just to see 
-    const scriptURL = document.currentScript.src;
-    const parentUrl = new URL('../', scriptURL).href; 
-    console.log(scriptURL);
-
-    // 1. Load stylesheets
-    await dynamicallyLoadScript(baseurl + 'global-custom-nav.css', 'link');
-    await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.css', 'link');
-
-    // 2. Load the script
-    await dynamicallyLoadScript(baseurl + 'global-custom-nav.js');
-    await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.js');
-    
-    // 3. Safe to use the library now
-    initGlobalNav(); 
-
-  } catch (error) {
-    console.error("Global Navigation Library loading failed:", error.message);
-  }
-}
-
-// Execute the async function
-// the library does include other tray and options, but we're skipping them for now
-if (['AccountAdmin'].some(a => ENV.current_user_types?.includes(a))) {
-	loadGlobalNavLibrary();
-}
-
-function initGlobalNav() {
-	console.log("The external libraries are ready to use!");
-
-    gcn_AdminTraySubAccountNav.init({
-        // account *names* which should be excluded from the search result breadcrumbs
-        searchAccountFilter: [],
-        // account *ids* as strings that should be excluded from the tree altogether
-        // if you have a consortium, use both the local id and the global (shard id)
-        accountFilter: [
-          // '123456', // sub account relative to root
-          // '100000000123456' // sub account relative to others
-        ],
-      });
-
-    const globalCustomNav_items = [];
-
-    const globalCustomNav_tray_throwback = {};
-    // throwback for admin tray - sub account navigation
-    globalCustomNav_tray_throwback.accounts = {
-      target: 'a[href="/accounts"]',
-      complete: 'gcn-admin-tray-sub-account-links',
-      actions: {
-        glbl: function () {
-          let content_location = document.querySelector('div.accounts-tray ul');
-          gcn_AdminTraySubAccountNav.throwback({
-            type: 'glbl',
-            mark: '#nav-tray-portal a[href="/accounts"]',
-            complete: 'gcn-admin-tray-sub-account-links',
-            where: content_location.closest('div'),
-            ul_class: content_location.getAttribute('class'),
-            li_class: content_location.children[1].getAttribute('class')
-          });
-        },
-        rspv: function () {
-          let rspv_tray_sel = `div[id^="Expandable"] a[href="/accounts"]`;
-          let content_location = document.querySelector(rspv_tray_sel).closest('ul');
-          gcn_AdminTraySubAccountNav.throwback({
-            type: 'rspv',
-            mark: rspv_tray_sel,
-            complete: 'gcn-admin-tray-sub-account-links',
-            where: content_location,
-            ul_class: content_location.getAttribute('class'),
-            li_class: content_location.children[1].getAttribute('class')
-          });
-        }
+  /**
+   * Dynamically loads a script or stylesheet if it doesn't already exist.
+   * We already have this function implemented elsewhere.
+   */
+/*   function dynamicallyLoadScript(url, type = 'script', async = true, attributes = {}) {
+    return new Promise((resolve, reject) => {
+      const selector = type === 'link' ? `link[href="${url}"]` : `script[src="${url}"]`;
+      const existingElement = document.querySelector(selector);
+      
+      if (existingElement) {
+        console.warn(`Resource already loaded: ${url}`);
+        return resolve(existingElement);
       }
-    };
 
-  const globalCustomNav_opts = {
-    nav_items: globalCustomNav_items,
-    throwbacks: globalCustomNav_tray_throwback
-  };
-  // load custom nav options
-  globalCustomNav.load(globalCustomNav_opts);
-}
+      const element = document.createElement(type);
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error(`Failed to load resource: ${url}`));
 
+      if (type === 'link') {
+        element.rel = 'stylesheet';
+        element.href = url;
+      } else {
+        element.src = url;
+        element.async = async;
+      }
+
+      Object.assign(element, attributes);
+      document.head.appendChild(element);
+    });
+  }
+ */
+  // --- SAFE EXECUTION ENVIRONMENT ---
+  // Ensure the current user has the correct administrative role in Canvas
+  const userRoles = (typeof ENV !== 'undefined' && ENV.current_user_types) ? ENV.current_user_types : [];
+  const current_userRoles = (typeof ENV !== 'undefined' && ENV.current_user_roles) ? ENV.current_user_roles : [];
+  
+  if (['admin'].some(a => current_userRoles.includes(a))) {
+    try {
+      console.log("CanvasGCN: Starting sequential asset load sequence...");
+      const baseurl = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/canvas/globalcustomnav/';
+
+      // 1. Load stylesheets
+      await dynamicallyLoadScript(baseurl + 'global-custom-nav.css', 'link');
+      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.css', 'link');
+
+      // 2. Load JS Scripts sequentially (Core engine, then throwback)
+      await dynamicallyLoadScript(baseurl + 'global-custom-nav.js');
+      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.js');
+
+      console.log("CanvasGCN: External libraries loaded and ready!");
+
+      // Resolve global engine and throwback context variables
+      const gcn = (typeof globalCustomNav !== 'undefined') ? globalCustomNav : window.globalCustomNav;
+      const subAccountNav = (typeof gcn_AdminTraySubAccountNav !== 'undefined') ? gcn_AdminTraySubAccountNav : window.gcn_AdminTraySubAccountNav;
+
+      if (!gcn || !subAccountNav) {
+        throw new Error("Core globalCustomNav or gcn_AdminTraySubAccountNav dependencies could not be resolved.");
+      }
+
+      // Initialize the throwback module with default configurations if present
+      if (typeof subAccountNav.init === 'function') {
+        subAccountNav.init({
+          searchAccountFilter: [],
+          accountFilter: []
+        });
+      }
+
+      // 3. CONFIGURE NAVIGATION ITEMS
+      const globalCustomNav_items = [{
+        title: 'Instructure Icon',
+        icon_svg: 'icon-pin',
+        href: 'https://instructure.design/#icons-font',
+        target: '_blank',
+        position: 1
+      }];
+
+      // 4. CONFIGURE CUSTOM THROWBACKS
+      // Map the subaccount throwback directly onto GCN's 'accounts' listener structure
+      const globalCustomNav_tray_throwback = {};
+      globalCustomNav_tray_throwback.accounts = {
+        target: 'a[href="/accounts"]',
+        actions: {
+          // STRUCTURAL FIX: complete MUST be inside actions for GCN core's observer to find and respect it!
+          complete: 'gcn-admin-tray-sub-account-links',
+          glbl: function () {
+            const mark_selector = '#nav-tray-portal a[href="/accounts"]';
+            const content_location = document.querySelector('div.accounts-tray ul');
+            if (!content_location) return;
+
+            // Let subAccountNav naturally execute and apply its own complete class to break the loop natively
+            subAccountNav.throwback({
+              type: 'glbl',
+              mark: mark_selector,
+              complete: 'gcn-admin-tray-sub-account-links',
+              where: content_location.closest('div'),
+              ul_class: content_location.getAttribute('class'),
+              li_class: content_location.children[1] ? content_location.children[1].getAttribute('class') : ''
+            });
+          },
+          rspv: function () {
+            const rspv_tray_sel = `div[id^="Expandable"] a[href="/accounts"]`;
+            const anchor = document.querySelector(rspv_tray_sel);
+            if (!anchor) return;
+
+            const content_location = anchor.closest('ul');
+            if (!content_location) return;
+
+            subAccountNav.throwback({
+              type: 'rspv',
+              mark: rspv_tray_sel,
+              complete: 'gcn-admin-tray-sub-account-links',
+              where: content_location,
+              ul_class: content_location.getAttribute('class'),
+              li_class: content_location.children[1] ? content_location.children[1].getAttribute('class') : ''
+            });
+          }
+        }
+      };
+
+      // 5. LOAD COMPLETED GCN OPTIONS
+      const globalCustomNav_opts = {
+        nav_items: globalCustomNav_items,
+        throwbacks: globalCustomNav_tray_throwback
+      };
+
+      gcn.load(globalCustomNav_opts);
+      console.log("CanvasGCN: Initialization complete.");
+
+    } catch (error) {
+      console.error("CanvasGCN: Global Navigation Library loading failed:", error.message);
+    }
+  } else {
+    console.log("CanvasGCN: User is not an AccountAdmin. Execution bypassed.");
+  }
+})();
