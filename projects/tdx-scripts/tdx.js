@@ -65,7 +65,7 @@ function dynamicallyLoadScript(url) {
     document.head.appendChild(script);
 }
 
-loadScriptAsync(baseURL + 'tdx-toc.js')
+loadScriptAsync(baseURL + 'tdx-toc.min.js')
     .then(() => console.log('tdx-toc.js script loaded successfully'))
     .catch(error => console.error(error));
 
@@ -694,7 +694,7 @@ function getGlobalAttributes(objIn) {
             "type": "tel"
         },
         "attribute11849": {
-            "pattern": "[0-9]{7}",
+            "pattern": "^[0-9]{7}$",
         }
     };
     const merged = { ...customAttributes, ...objIn };

@@ -71,16 +71,6 @@ form[action^="/TDClient/3292/SSC/"] {
 	        }
 	}
 
-	/* has technician license */
-	:has(.user-profile-menu a[href*="TDNext"]){
-		/* background-color: #eee */
-	}
-
-	/* this article edit privileges */
-	:has(a.DetailAction[href*="KB/Edit?ID="]){
-		/* background-color: #eee; */
-	}
-
 	/* universal to this portal */
         header .themed.tdbar {
             display: none;
@@ -299,4 +289,8 @@ body .oda-chat-wrapper .oda-chat-icon-wrapper, body .oda-chat-wrapper .oda-chat-
 	#isChatWelcomeBubble.welcomeBubbleShow {
 		width: 220px;
 	}
+}
+
+.logo-header button {
+    color: initial !important;
 }
