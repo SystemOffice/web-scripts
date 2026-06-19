@@ -168,8 +168,13 @@ function addClientLink(doc) {
 		
 		const ticketID = doc.getElementById('btnCopyID').innerText;
 
+        const base = "/TDClient/";
+        if (isSandbox()) {
+            base = "/SBTDClient/";
+        }
+
 		newItem.addEventListener('click', () => {
-		  window.open('/TDClient/' + mapObj[thisapp] + '/Portal/Requests/TicketRequests/TicketDet?TicketID=' + ticketID, '_portal');
+		  window.open(base + mapObj[thisapp] + '/Portal/Requests/TicketRequests/TicketDet?TicketID=' + ticketID, '_portal');
 		});
 
 		penUltimatListItem.insertAdjacentElement("afterend", newItem);
