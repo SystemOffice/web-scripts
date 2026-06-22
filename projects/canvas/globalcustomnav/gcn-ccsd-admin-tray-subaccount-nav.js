@@ -1,3 +1,5 @@
+// sub account admin support (dev)
+
 /**
 // @name        Admin Tray Sub Account Nav Throwback for Global Custom Navigation
 // @namespace   https://github.com/robert-carroll/canvaslms-global-custom-navigation
@@ -222,7 +224,23 @@ const gcn_AdminTraySubAccountNav = (function() {
       tempAccountData = null;
     }
 
-    var res = await fetch(`/api/v1/accounts/`, {
+//     // SA: Check if this user gets a 403 unauthorized on the self/sub_accounts endpoint
+//     // If they do, they are a Sub-Account Admin.
+//     let isSubAccountAdmin = false;
+//     try {
+//       let saCheck = await fetch(`/api/v1/accounts/self/sub_accounts?per_page=1`, {
+//         method: 'GET',
+//         headers: { Accept: 'application/json' }
+//       });
+//       if (saCheck.status === 403 || saCheck.status === 401) {
+//         isSubAccountAdmin = true;
+//       }
+//     } catch(err) {
+//       console.error(err);
+//     }
+
+    // SA: Go through the sub accounts they have access to
+    var res = await fetch(`/api/v1/accounts/?per_page=100`, {
       method: 'GET',
       headers: {
         Accept: 'application/json+canvas-string-ids'
@@ -232,6 +250,13 @@ const gcn_AdminTraySubAccountNav = (function() {
       return res.json();
     }).catch(err => console.error(err));
 
+    // SA: Check if this user lacks a root account (root_account_id === null) in their accessible accounts.
+    // If they do not have a root account in this list, they are a Sub-Account Admin.
+    let isSubAccountAdmin = false;
+    if (res && res.length > 0) {
+      isSubAccountAdmin = !res.some(account => account.root_account_id === null);
+    }
+    
     var saveProgress = setInterval(() => {
       localStorage.setItem(`${subaccnav.instance}.page`, page);
       localStorage.setItem(`${subaccnav.instance}.root`, currentRootId);
@@ -240,7 +265,9 @@ const gcn_AdminTraySubAccountNav = (function() {
 
     try {
       for (let account of res) {
-        if(account.root_account_id !== null) {
+        // SA: If they are a root admin, skip non-root accounts to prevent duplicates.
+        // If they are a Sub-Account Admin, do not skip. We will go through the accounts they have access to.
+        if(!isSubAccountAdmin && account.root_account_id !== null) {
           // skip account if it's not a root account
           // prevents duplicate search results if a root admin has been added as an admin of a sub account
           continue;
@@ -253,6 +280,12 @@ const gcn_AdminTraySubAccountNav = (function() {
           } else if (tempAccountRoot == currentRootId) {
             tempAccountRoot = null;
           }
+        }
+
+        // SA: Prevent duplicating recursive fetches for Sub-Account Admins if an account was 
+        // already collected as a sub-account of a previously processed parent account.
+        if (isSubAccountAdmin && (currentRootId in accountData.index) && tempAccountRoot !== currentRootId) {
+          continue;
         }
 
         if (!(currentRootId in accountData.index)) {
@@ -276,6 +309,7 @@ const gcn_AdminTraySubAccountNav = (function() {
 
         while (!done) {
           
+          // SA: Recursively fetch the sub accounts of the accounts they have access to
           var accounts = await fetch(`/api/v1/accounts/${currentRootId}/sub_accounts?recursive=true&per_page=100&page=${page}`, {
             method: 'GET',
             headers: {
@@ -336,7 +370,9 @@ const gcn_AdminTraySubAccountNav = (function() {
       if (!account.parent_id) {
         tree.push(account);
       } else if (!(account.parent_id in accountList.index)) { // list should be in the proper order for this to work
-        continue;
+        // SA: For Sub-Account Admins, the parent account may not be accessible/indexed.
+        // In this case, treat this account as a top-level root in the tree instead of skipping it.
+        tree.push(account);
       }
       else {
         const parent_id = account.parent_id;

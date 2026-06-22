@@ -37,12 +37,7 @@
     });
   }
  */
-  // --- SAFE EXECUTION ENVIRONMENT ---
-  // Ensure the current user has the correct administrative role in Canvas
-  const userRoles = (typeof ENV !== 'undefined' && ENV.current_user_types) ? ENV.current_user_types : [];
-  const current_userRoles = (typeof ENV !== 'undefined' && ENV.current_user_roles) ? ENV.current_user_roles : [];
-  
-  if (['admin'].some(a => current_userRoles.includes(a))) {
+
     try {
       console.log("CanvasGCN: Starting sequential asset load sequence...");
       const baseurl = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/canvas/globalcustomnav/';
@@ -74,13 +69,7 @@
       }
 
       // 3. CONFIGURE NAVIGATION ITEMS
-      const globalCustomNav_items = [{
-        title: 'Instructure Icon',
-        icon_svg: 'icon-pin',
-        href: 'https://instructure.design/#icons-font',
-        target: '_blank',
-        position: 1
-      }];
+      const globalCustomNav_items = [];
 
       // 4. CONFIGURE CUSTOM THROWBACKS
       // Map the subaccount throwback directly onto GCN's 'accounts' listener structure
@@ -137,7 +126,5 @@
     } catch (error) {
       console.error("CanvasGCN: Global Navigation Library loading failed:", error.message);
     }
-  } else {
-    console.log("CanvasGCN: User is not an AccountAdmin. Execution bypassed.");
-  }
+
 })();
