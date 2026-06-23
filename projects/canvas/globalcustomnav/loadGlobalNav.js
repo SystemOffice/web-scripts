@@ -3,14 +3,12 @@
 // @description Safely loads GCN files and manually bridges isolated throwback scripts like Subaccount Nav.
 **/
 
-(async function () {
-  'use strict';
 
   /**
    * Dynamically loads a script or stylesheet if it doesn't already exist.
    * We already have this function implemented elsewhere.
    */
-/*   function dynamicallyLoadScript(url, type = 'script', async = true, attributes = {}) {
+/*    function dynamicallyLoadScript(url, type = 'script', async = true, attributes = {}) {
     return new Promise((resolve, reject) => {
       const selector = type === 'link' ? `link[href="${url}"]` : `script[src="${url}"]`;
       const existingElement = document.querySelector(selector);
@@ -35,9 +33,28 @@
       Object.assign(element, attributes);
       document.head.appendChild(element);
     });
-  }
- */
+  } */
 
+(async function () {
+  'use strict';
+  
+	function waitForObject(targetRef, interval = 50) {
+	  return new Promise((resolve) => {
+		const check = setInterval(() => {
+		  try {
+			// If targetRef() returns truthy, we are done!
+			if (targetRef()) {
+			  clearInterval(check);
+			  resolve(true);
+			}
+		  } catch (error) {
+			// Silently swallow the error. 
+			// It just means the object or its parent isn't ready yet.
+		  }
+		}, interval);
+	  });
+	}
+	  
     try {
       console.log("CanvasGCN: Starting sequential asset load sequence...");
       const baseurl = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/canvas/globalcustomnav/';
@@ -53,6 +70,9 @@
       console.log("CanvasGCN: External libraries loaded and ready!");
 
       // Resolve global engine and throwback context variables
+	  let testGCN = await waitForObject(() => globalCustomNav);
+	  testGCN = await waitForObject(() => gcn_AdminTraySubAccountNav);
+	  
       const gcn = (typeof globalCustomNav !== 'undefined') ? globalCustomNav : window.globalCustomNav;
       const subAccountNav = (typeof gcn_AdminTraySubAccountNav !== 'undefined') ? gcn_AdminTraySubAccountNav : window.gcn_AdminTraySubAccountNav;
 
@@ -68,8 +88,23 @@
         });
       }
 
-      // 3. CONFIGURE NAVIGATION ITEMS
-      const globalCustomNav_items = [];
+        // 3. CONFIGURE NAVIGATION ITEMS
+        var globalCustomNav_items = [];
+	  
+		if ( collegePrefs[ENV.primaryAccount] ){
+			let customNav = collegePrefs[ENV.primaryAccount]?.customNav;
+			// If pref is undefined, do nothing.
+			//debugger;
+			if (customNav) {
+				// defaults
+				for (const navItem of customNav){
+					navItem.icon_svg = navItem.icon_svg ?? 'icon-info';
+					navItem.position = navItem.position ?? 'after';
+				}
+				globalCustomNav_items.push(...customNav);
+			}
+		}
+
 
       // 4. CONFIGURE CUSTOM THROWBACKS
       // Map the subaccount throwback directly onto GCN's 'accounts' listener structure
