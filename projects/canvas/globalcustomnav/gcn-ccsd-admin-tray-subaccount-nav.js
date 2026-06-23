@@ -270,7 +270,8 @@ const gcn_AdminTraySubAccountNav = (function() {
         if(!isSubAccountAdmin && account.root_account_id !== null) {
           // skip account if it's not a root account
           // prevents duplicate search results if a root admin has been added as an admin of a sub account
-          continue;
+          // DT: a root admin may not be able to access the API for sub-accounts of the root
+          // continue;
         }
         currentRootId = account.id;
 
@@ -320,6 +321,11 @@ const gcn_AdminTraySubAccountNav = (function() {
             return res.json();
           }).catch(err => console.error(err));
 
+          if ( accounts === undefined ){
+            done = true;
+            break;
+          }
+          
           if (accounts.length === 0) {
             done = true;
             break;
