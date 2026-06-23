@@ -60,12 +60,12 @@
       const baseurl = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@main/projects/canvas/globalcustomnav/';
 
       // 1. Load stylesheets
-      await dynamicallyLoadScript(baseurl + 'global-custom-nav.css', 'link');
-      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.css', 'link');
+      await dynamicallyLoadScript(baseurl + 'global-custom-nav.min.css', 'link');
+      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.min.css', 'link');
 
       // 2. Load JS Scripts sequentially (Core engine, then throwback)
-      await dynamicallyLoadScript(baseurl + 'global-custom-nav.js');
-      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.js');
+      await dynamicallyLoadScript(baseurl + 'global-custom-nav.min.js');
+      await dynamicallyLoadScript(baseurl + 'gcn-ccsd-admin-tray-subaccount-nav.min.js');
 
       console.log("CanvasGCN: External libraries loaded and ready!");
 
@@ -91,19 +91,19 @@
         // 3. CONFIGURE NAVIGATION ITEMS
         var globalCustomNav_items = [];
 	  
-		if ( collegePrefs[ENV.primaryAccount] ){
-			let customNav = collegePrefs[ENV.primaryAccount]?.customNav;
-			// If pref is undefined, do nothing.
-			//debugger;
-			if (customNav) {
-				// defaults
-				for (const navItem of customNav){
-					navItem.icon_svg = navItem.icon_svg ?? 'icon-info';
-					navItem.position = navItem.position ?? 'after';
-				}
-				globalCustomNav_items.push(...customNav);
-			}
-		}
+        if ( typeof collegePrefs !== 'undefined' && collegePrefs[ENV.primaryAccount] ){
+          let customNav = collegePrefs[ENV.primaryAccount]?.customNav;
+          // If pref is undefined, do nothing.
+          //debugger;
+          if (customNav) {
+            // defaults
+            for (const navItem of customNav){
+              navItem.icon_svg = navItem.icon_svg ?? 'icon-info';
+              navItem.position = navItem.position ?? 'after';
+            }
+            globalCustomNav_items.push(...customNav);
+          }
+        }
 
 
       // 4. CONFIGURE CUSTOM THROWBACKS
@@ -114,6 +114,11 @@
         actions: {
           // STRUCTURAL FIX: complete MUST be inside actions for GCN core's observer to find and respect it!
           complete: 'gcn-admin-tray-sub-account-links',
+          expand: function (tray) {
+            const firstItem = tray.querySelector('ul li a');
+            if (!firstItem) return;
+            firstItem.click();
+          },
           glbl: function () {
             const mark_selector = '#nav-tray-portal a[href="/accounts"]';
             const content_location = document.querySelector('div.accounts-tray ul');
@@ -128,6 +133,11 @@
               ul_class: content_location.getAttribute('class'),
               li_class: content_location.children[1] ? content_location.children[1].getAttribute('class') : ''
             });
+
+            const gcn_admin_tray_san = document.querySelector('#gcn-admin-tray-san');
+            if (gcn_admin_tray_san) {
+              this.expand(gcn_admin_tray_san);
+            }
           },
           rspv: function () {
             const rspv_tray_sel = `div[id^="Expandable"] a[href="/accounts"]`;
