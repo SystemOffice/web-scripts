@@ -323,6 +323,7 @@ function ticketProcessing(){
         if (tdxUpdateEdit) {
             // add any custom attributes to edit/update form elements
             addElementAttributes(iframeDocument);
+            validateFormWithLibrary(iframeDocument);
         }
 
     }
@@ -393,3 +394,77 @@ function addElementAttributes(doc = document) {
     }
 }
 
+
+/**
+ * Loads a validation library if constraints are defined in hidden JSON config and logs missing fields.
+ * https://docs.google.com/document/d/1j-vmeSAZMQpAEwyAZQpfm6zC9iel6kjqlMnHoRCD1gc/edit?tab=t.0
+ */
+function validateFormWithLibrary(doc = document) {
+	// potentially merge with global object
+    const localConstraints = getCustomFormJSONObj("constraints");
+    const constraints = getGlobalAttributeConstaints(localConstraints);
+    const form = doc.querySelector('form');
+
+    if (constraints && form) {
+        // console.log('required fields from JSON', constraints);
+        loadScriptAsync('https://cdnjs.cloudflare.com/ajax/libs/validate.js/0.13.1/validate.min.js').then(() => {
+
+			// console.log('validation library loaded successfully');
+
+            // this probably needs to be onsubmit?
+            // or potentially on blur of each field to give more real-time feedback, 
+            // see https://validatejs.org/examples.html
+            $('form').on('submit', function (e) {
+                var errors = validate(form, constraints);
+                // then we update the form to reflect the results
+                // showErrors(form, errors || {});
+                if (errors) {
+                    console.log('form data is invalid, errors: ', errors);
+                    showErrors(errors, doc);
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+		}).catch(error => console.error('error loading validation library: ' + error));
+    }
+    else {
+        // console.log('no required fields defined in JSON');
+        return;
+    }
+}
+
+function showErrors(errors, doc = document) {
+    //debugger;
+    errorFields = Object.keys(errors);
+    errorFields.forEach(field => {
+        var fieldEl = doc.getElementById(field);
+        if (fieldEl) {
+            
+            fieldEl.classList.add('error');
+            // Create a new span element
+            const newSpan = doc.createElement('span');
+            newSpan.id = field + "-error";
+
+            var errorMessage = errors[field][0];
+            const regex = new RegExp(field, "i"); 
+            const currValue = fieldEl.value || '';
+
+            newSpan.textContent = errorMessage;
+
+            newSpan.innerHTML = newSpan.innerHTML.replace(regex, "<strong>" + currValue + "</strong>");
+
+            // 3. create parent span element
+            const pSpan = doc.createElement('span');
+            pSpan.setAttribute('class', 'field-validation-error');
+            pSpan.setAttribute('data-valmsg-for',field);
+            pSpan.setAttribute('data-valmsg-replace','true');
+            pSpan.appendChild(newSpan);
+
+            // 4. Insert it immediately after as a sibling
+            fieldEl.after(pSpan); 
+
+        }
+    });
+
+}
