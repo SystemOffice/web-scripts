@@ -319,7 +319,7 @@ function ticketProcessing(){
 		    fixDetails(iframeDocument);
 		}
 		
-        let tdxUpdateEdit = iframeDocument.querySelector('#NewStatusId') || document.querySelector('#NewStatusId');
+        let tdxUpdateEdit = iframeDocument.querySelector('#frmTicketUpdate, #frmTicketEdit') || document.querySelector('#frmTicketUpdate, #frmTicketEdit');
         if (tdxUpdateEdit) {
             // add any custom attributes to edit/update form elements
             addElementAttributes(iframeDocument);
