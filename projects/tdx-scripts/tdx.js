@@ -667,6 +667,7 @@ function getCustomFormJSONObj(objID) {
     return null;
 }
 
+// merges passed in object to any global attributes defined in the script, so that we can add new attributes without needing to edit the script directly.
 function getGlobalAttributeConstaints(objIn) {
     const constraints = {
         "attribute14516": {

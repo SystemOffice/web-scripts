@@ -309,17 +309,87 @@ function ticketProcessing(){
 		let iframeDocument = frame.contentDocument || frame.contentWindow.document;
 		// is it a ticket iframe?
 		let tdxDetailDiv = iframeDocument.querySelector('#upDetails') || document.querySelector('#upDetails'); 
-		if (!tdxDetailDiv){
-			continue;
+		if (tdxDetailDiv){
+			// continue;
+       		// it's a ticket, so add client button
+            addClientLink(iframeDocument);
+            // add a button to add to your work
+            addToMyWorkButton(iframeDocument);
+            // fix the details section
+		    fixDetails(iframeDocument);
 		}
 		
-		// it's a ticket, so add client button
-		addClientLink(iframeDocument);
-		// add a button to add to your work
-		addToMyWorkButton(iframeDocument);
-		// fix the details section
-		fixDetails(iframeDocument);
+        let tdxUpdateEdit = iframeDocument.querySelector('#NewStatusId') || document.querySelector('#NewStatusId');
+        if (tdxUpdateEdit) {
+            // add any custom attributes to edit/update form elements
+            addElementAttributes(iframeDocument);
+        }
+
     }
 }
 
 detectFrames();
+
+/**
+ * Reads a hidden JSON config element and returns the requested object key if found.
+ */
+function getCustomFormJSONObj(objID, doc = document) {
+    const customFormElements = doc.querySelector('.formCustomElements, .tdx-validate-config');
+    if (customFormElements) {
+        try {
+            const formJSON = JSON.parse(customFormElements.innerText);
+            if (formJSON && formJSON[objID]) {
+                return formJSON[objID];
+            }
+        }
+        catch (err) {
+            console.log('error parsing custom form JSON: ' + err);
+            return null;
+        }
+    }
+    return null;
+}
+
+// example of how we can use the above function to add attributes to elements, such as type="email" for built-in validation, 
+// where TDX does not support it natively. This is a bit of a hack but allows for more flexible form configurations 
+// without needing to edit the script directly for each new attribute or field. 
+// We can define custom attributes in the hidden JSON config and they will be applied on page load.
+// this is not just about forms, but any identifiable element by ID, so it could be used for other purposes as well, 
+// such as adding data- attributes for custom JS functionality, etc.
+function getGlobalAttributes(objIn) {
+    const customAttributes = {
+        "attribute14516": {
+            "type": "email"
+        },
+        "attribute14513": {
+            "type": "tel"
+        },
+        "attribute11849": {
+            "pattern": "^[0-9]{7}$",
+        }
+    };
+    const merged = { ...customAttributes, ...objIn };
+    return merged;
+}
+
+// This function reads custom attributes from a hidden JSON config and applies them to form elements by ID.
+// For example, it can set the type="email" attribute on an input to trigger built-in HTML5 validation.
+// Or min, max, range, pattern, or any other attribute supported by the element, where it is not supported by TDX.
+function addElementAttributes(doc = document) {
+    const customAttributes = getCustomFormJSONObj("customAttributes");
+    // merges custom to global attributes, so we have one object
+    const globalAttributes = getGlobalAttributes(customAttributes);
+    const form = document.querySelector('form');
+    if (globalAttributes && form) {
+        Object.keys(globalAttributes).forEach(function (key) {
+            var element = doc.getElementById(key);
+            if (element) {
+                var attributes = globalAttributes[key];
+                Object.keys(attributes).forEach(function (attrKey) {
+                    element.setAttribute(attrKey, attributes[attrKey]);
+                });
+            }
+        });
+    }
+}
+
