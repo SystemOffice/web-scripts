@@ -1,4 +1,6 @@
 // sub account admin support (dev)
+// better sorting
+// keep filtered accounts from being raised to top level nav for root admin
 
 /**
 // @name        Admin Tray Sub Account Nav Throwback for Global Custom Navigation
@@ -140,7 +142,6 @@ const gcn_AdminTraySubAccountNav = (function() {
 
       for (let parentNode of result.parents) {
         results_list += `<a href='/accounts/${parentNode.id}'>${parentNode.name}</a>`;
-        // TODO switch to ltr for rtl
         results_list += `<span> ${subaccnav.dir == 'ltr' ? '&gt;' : '&lt;'} </span>`;
       }
 
@@ -192,7 +193,6 @@ const gcn_AdminTraySubAccountNav = (function() {
     // reload
     document.querySelector(`#${subaccnav.container_id} a.gcn-san-reload`).onclick = e => {
       e.preventDefault();
-      // TODO detect RTL/LTR
       let prompt = subaccnav.reload_text;
       if (confirm(prompt)) {
         localStorage.removeItem(subaccnav.instance);
@@ -223,23 +223,7 @@ const gcn_AdminTraySubAccountNav = (function() {
       accountData = JSON.parse(tempAccountData);
       tempAccountData = null;
     }
-
-//     // SA: Check if this user gets a 403 unauthorized on the self/sub_accounts endpoint
-//     // If they do, they are a Sub-Account Admin.
-//     let isSubAccountAdmin = false;
-//     try {
-//       let saCheck = await fetch(`/api/v1/accounts/self/sub_accounts?per_page=1`, {
-//         method: 'GET',
-//         headers: { Accept: 'application/json' }
-//       });
-//       if (saCheck.status === 403 || saCheck.status === 401) {
-//         isSubAccountAdmin = true;
-//       }
-//     } catch(err) {
-//       console.error(err);
-//     }
-
-    // SA: Go through the sub accounts they have access to
+    // accounts the admin user has access to
     var res = await fetch(`/api/v1/accounts/?per_page=100`, {
       method: 'GET',
       headers: {
@@ -248,15 +232,19 @@ const gcn_AdminTraySubAccountNav = (function() {
     }).then(res => {
       if (!res.ok) throw Error(res.status);
       return res.json();
-    }).catch(err => console.error(err));
+    }).catch(err => {
+      console.error(err);
+      // explicitly return null on catch to avoid uncaught iterable failures downstream
+      return null;
+    });
 
-    // SA: Check if this user lacks a root account (root_account_id === null) in their accessible accounts.
-    // If they do not have a root account in this list, they are a Sub-Account Admin.
+    const accountsList = res || [];
+
     let isSubAccountAdmin = false;
-    if (res && res.length > 0) {
-      isSubAccountAdmin = !res.some(account => account.root_account_id === null);
+    if (accountsList.length > 0) {
+      isSubAccountAdmin = !accountsList.some(account => account.root_account_id === null);
     }
-    
+
     var saveProgress = setInterval(() => {
       localStorage.setItem(`${subaccnav.instance}.page`, page);
       localStorage.setItem(`${subaccnav.instance}.root`, currentRootId);
@@ -264,14 +252,18 @@ const gcn_AdminTraySubAccountNav = (function() {
     }, subaccnav.loadingSaveProgressInterval);
 
     try {
-      for (let account of res) {
-        // SA: If they are a root admin, skip non-root accounts to prevent duplicates.
-        // If they are a Sub-Account Admin, do not skip. We will go through the accounts they have access to.
+      for (let account of accountsList) {
+        // stop filtered accounts before any tree indexing or triggering children queries
+        if (subaccnav.accountFilter.includes(account.id)) {
+          continue;
+        }
+
+        // if they are a root admin, skip non-root accounts to prevent duplicates
+        // if they are a sub-account admin, go through the accounts they have access to
         if(!isSubAccountAdmin && account.root_account_id !== null) {
           // skip account if it's not a root account
           // prevents duplicate search results if a root admin has been added as an admin of a sub account
-          // DT: a root admin may not be able to access the API for sub-accounts of the root
-          // continue;
+          continue;
         }
         currentRootId = account.id;
 
@@ -283,8 +275,8 @@ const gcn_AdminTraySubAccountNav = (function() {
           }
         }
 
-        // SA: Prevent duplicating recursive fetches for Sub-Account Admins if an account was 
-        // already collected as a sub-account of a previously processed parent account.
+        // prevent duplicating recursive fetches for sub-account admins if an account was 
+        // already collected as a sub-account of a previously processed parent account
         if (isSubAccountAdmin && (currentRootId in accountData.index) && tempAccountRoot !== currentRootId) {
           continue;
         }
@@ -309,30 +301,31 @@ const gcn_AdminTraySubAccountNav = (function() {
         }
 
         while (!done) {
-          
-          // SA: Recursively fetch the sub accounts of the accounts they have access to
+
+          // recursively fetch the sub accounts of the accounts they have access to
           var accounts = await fetch(`/api/v1/accounts/${currentRootId}/sub_accounts?recursive=true&per_page=100&page=${page}`, {
             method: 'GET',
             headers: {
               Accept: 'application/json+canvas-string-ids'
             },
           }).then(res => {
+            // check if this returns a 403. Log console error warning about incorrect permissions
+            if (res.status === 403) {
+              console.error(`gCn: User lacks the correct recursive permissions for sub-accounts. (Account ID: ${currentRootId})`);
+            }
             if (!res.ok) throw Error(res.status);
             return res.json();
           }).catch(err => console.error(err));
+          // handle if recursive sub-account fetches fail mid-operation
+          const currentBatch = accounts || [];
 
-          if ( accounts === undefined ){
-            done = true;
-            break;
-          }
-          
-          if (accounts.length === 0) {
+          if (currentBatch.length === 0) {
             done = true;
             break;
           }
 
-          for (let i=0, len=accounts.length; i<len; i++) {
-            const subAccount = accounts[i];
+          for (let i=0, len=currentBatch.length; i<len; i++) {
+            const subAccount = currentBatch[i];
             const id = subAccount.id;
 
             if (subaccnav.accountFilter.includes(id)) {
@@ -369,15 +362,34 @@ const gcn_AdminTraySubAccountNav = (function() {
   subaccnav.accounts_to_tree = (accountList) => {
     const tree = [];
 
+    // helper to evaluate if this account or any ancestor in its lineage matches your filter list
+    const isFilteredDescendant = (account) => {
+      let current = account;
+      while (current) {
+        if (current.parent_id && subaccnav.accountFilter.includes(current.parent_id)) {
+          return true; // ancestor belongs to filter, discard this branch completely
+        }
+        current = accountList.index[current.parent_id];
+      }
+      return false;
+    };
+
     for (let i=0, len=accountList.ids.length; i<len; i++) {
       const id = accountList.ids[i];
       const account = accountList.index[id];
 
+      // discard sub-accounts whose parents/ancestors have been excluded
+      // prevent filtered accounts from being in top level nav
+      if (isFilteredDescendant(account)) {
+        continue;
+      }
+
       if (!account.parent_id) {
         tree.push(account);
-      } else if (!(account.parent_id in accountList.index)) { // list should be in the proper order for this to work
-        // SA: For Sub-Account Admins, the parent account may not be accessible/indexed.
-        // In this case, treat this account as a top-level root in the tree instead of skipping it.
+      } else if (!(account.parent_id in accountList.index)) { 
+        // list should be in the proper order for this to work
+        // if parent is missing but not filtered (e.g. user is sub-account admin with limited scope),
+        // raise account to the top level navigation
         tree.push(account);
       }
       else {
@@ -392,11 +404,11 @@ const gcn_AdminTraySubAccountNav = (function() {
       }
     }
 
+    // recursive alpha aorter using localeCompare 
+    // supports case-insensitivity, accents, and numeric structures naturally
     const sortChildren = (node) => {
-      if (node.children) {
-        if (node.children.length > 10) {
-          node.children.sort((a, b) => a.name < b.name ? -1 : 1);
-        }
+      if (node.children && node.children.length > 0) {
+        node.children.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
   
         for (let child of node.children) {
           sortChildren(child);
@@ -404,19 +416,35 @@ const gcn_AdminTraySubAccountNav = (function() {
       }
     }
   
+    // alphabetize the root levels of the tree
+    tree.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+
+    // deep-sort all children lists recursively
     for (let key in tree) {
       sortChildren(tree[key]);
     }
 
     subaccnav.tree = tree;
-    // update tray when accounts are collected
-    subaccnav.throwback(subaccnav.tray);
+    
+  // update tray when accounts are collected
+    if (subaccnav.tray) {
+      subaccnav.throwback(subaccnav.tray);
+    }
 
     return tree;
   }
 
-  subaccnav.throwback = (tray = {}) => {
-    subaccnav.tray = tray || subaccnav.tray;
+  subaccnav.throwback = (tray) => {
+
+    // if a valid tray configuration with actual mount coordinates is provided, track it
+    if (tray && typeof tray === 'object' && Object.keys(tray).length > 0) {
+      subaccnav.tray = tray;
+    }
+    
+    // don't attempt to render if the tray is not on screen
+    if (!subaccnav.tray) return;
+
+    // if the tree is ready, render root list and html
     subaccnav.container_id = ( subaccnav.tray.type == 'rspv' ? 'rspv-' : '') + 'gcn-admin-tray-subaccount-nav';
 
     let san = document.querySelector(`#${subaccnav.container_id}`);
@@ -424,7 +452,6 @@ const gcn_AdminTraySubAccountNav = (function() {
 
     let san_content = '';
     if(subaccnav.tree.length != 0) {
-      // if the tree is ready, render root list and html
       subaccnav.html = subaccnav.tree_to_html(subaccnav.tree);
       san_content = `<input type="text" id="gcn-admin-tray-san-search" placeholder="${subaccnav.search_text}" />
       <ol id="gcn-admin-tray-san-results" class="${subaccnav.tray.ul_class}" dir="${subaccnav.dir}"></ol>
