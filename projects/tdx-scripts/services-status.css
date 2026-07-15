@@ -1,0 +1,285 @@
+/* services-status.js page styling */
+
+#tdx-services-status {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #1a1a1a;
+}
+
+#tdx-services-status h1 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+#tdx-services-status .sts-updated {
+    margin: 0.25rem 0 1.5rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+#tdx-services-status .sts-preview-banner {
+    margin: -0.75rem 0 1.5rem;
+    padding: 0.6rem 0.85rem;
+    background: #e8f0fe;
+    border: 1px solid #c6dafc;
+    border-radius: 6px;
+    color: #174ea6;
+    font-size: 0.85rem;
+}
+
+#tdx-services-status h2 {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.35rem;
+}
+
+#tdx-services-status .sts-dot {
+    display: inline-block;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+#tdx-services-status .sts-dot-green { background: #1e8e3e; }
+#tdx-services-status .sts-dot-blue { background: #1a73e8; }
+#tdx-services-status .sts-dot-red { background: #c5221f; }
+
+#tdx-services-status .sts-allclear {
+    display: flex;
+    align-items: center;
+    background: #f1f8f2;
+    border: 1px solid #cfe8d4;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+
+#tdx-services-status .sts-notice-card {
+    border: 1px solid #f0d9b5;
+    background: #fffaf0;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+#tdx-services-status .sts-notice-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#tdx-services-status .sts-notice-title {
+    font-weight: 600;
+}
+
+#tdx-services-status .sts-notice-system {
+    margin: 0.35rem 0 0;
+    color: #444;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+#tdx-services-status .sts-notice-desc {
+    margin: 0.5rem 0 0.35rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+#tdx-services-status .sts-notice-desc p:first-child { margin-top: 0; }
+#tdx-services-status .sts-notice-desc p:last-child { margin-bottom: 0; }
+#tdx-services-status .sts-notice-desc a { color: #1a73e8; }
+
+#tdx-services-status .sts-notice-window {
+    margin: 0;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+#tdx-services-status .sts-pill {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+/* Pill colors - red-green is very difficult for colorblind individuals */
+#tdx-services-status .sts-pill-red {
+    background: repeating-linear-gradient(45deg, #d3f329, #d3f329 5px, #e6b000 5px, #e6b000 10px);
+    color: #c5221f;
+}
+
+#tdx-services-status .sts-pill-blue {
+    background: #e8f0fe;
+    color: #1a73e8;
+}
+
+#tdx-services-status .sts-services-hint {
+    margin: -0.35rem 0 0.75rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+#tdx-services-status .sts-table-wrap {
+    overflow-x: auto;
+    padding-bottom: 0.65rem;
+}
+
+#tdx-services-status .sts-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tdx-services-status .sts-table th,
+#tdx-services-status .sts-table td {
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+    font-size: 0.85rem;
+    border-top: 1px solid #eee;
+}
+
+#tdx-services-status .sts-table thead th {
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    color: #555;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+#tdx-services-status .sts-table tbody tr:first-child td {
+    border-top: none;
+}
+
+#tdx-services-status .sts-service-name-cell {
+    width: 40%;
+}
+
+#tdx-services-status .sts-day-cell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+#tdx-services-status .sts-day-cell .sts-dot {
+    margin-right: 0;
+}
+
+#tdx-services-status .sts-service-row {
+    cursor: pointer;
+}
+
+#tdx-services-status .sts-service-row:hover {
+    background: #f7f8f9;
+}
+
+#tdx-services-status .sts-service-row:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: -2px;
+}
+
+#tdx-services-status .sts-row-caret {
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.15s ease;
+}
+
+#tdx-services-status .sts-row-caret::before {
+    content: '\25B8';
+}
+
+#tdx-services-status .sts-service-row[aria-expanded="true"] .sts-row-caret {
+    transform: rotate(90deg);
+}
+
+#tdx-services-status .sts-detail-row {
+    display: table-row;
+}
+
+#tdx-services-status .sts-detail-row[hidden] {
+    display: none;
+}
+
+#tdx-services-status .sts-detail-cell {
+    background: #fafbfc;
+    border-top: 1px solid #eee;
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+#tdx-services-status .sts-detail .sts-history {
+    margin-top: 1rem;
+}
+
+#tdx-services-status .sts-detail .sts-history h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+#tdx-services-status .sts-history-empty {
+    margin: 0;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+#tdx-services-status .sts-uptime-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+}
+
+#tdx-services-status .sts-uptime-bar {
+    display: flex;
+    gap: 2px;
+    height: 1.5rem;
+}
+
+#tdx-services-status .sts-uptime-seg {
+    flex: 1 1 0;
+    min-width: 2px;
+    border-radius: 2px;
+}
+
+#tdx-services-status .sts-uptime-seg-green { background: #1e8e3e; }
+#tdx-services-status .sts-uptime-seg-blue { background: #1a73e8; }
+#tdx-services-status .sts-uptime-seg-red { background: #c5221f; }
+
+#tdx-services-status .sts-uptime-range {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.3rem;
+    color: #666;
+    font-size: 0.75rem;
+}
+
+#tdx-services-status .sts-uptime-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #555;
+}
+
+#tdx-services-status .sts-legend-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+#tdx-services-status .sts-error {
+    background: #fce8e6;
+    border: 1px solid #f6c1bd;
+    border-radius: 6px;
+    padding: 1rem;
+    color: #c5221f;
+}
