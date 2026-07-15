@@ -206,13 +206,20 @@ function serviceDayStatus(service, notices, dayStart, dayEnd) {
 }
 
 /**
- * dayStatusClass(status)
+ * dayStatusClass(status, includeIcon)
  * Maps a serviceDayStatus() result to its status-dot modifier class.
  */
-function dayStatusClass(status) {
-    if (status.disruptive) return 'sts-dot-red';
-    if (status.noticeOnly) return 'sts-dot-blue';
-    return 'sts-dot-green';
+function dayStatusClass(status, includeIcon = false) {
+    const baseClass = status.disruptive ? 'sts-dot-red' : status.noticeOnly ? 'sts-dot-blue' : 'sts-dot-green';
+    if (!includeIcon) return baseClass;
+
+    const iconClass = status.disruptive
+        ? 'fa fa-exclamation-circle'
+        : status.noticeOnly
+            ? 'fa fa-info-circle'
+            : 'fa fa-circle-check';
+
+    return `${baseClass} ${iconClass}`;
 }
 
 /**
@@ -328,7 +335,7 @@ function buildServiceRow(service, days, notices) {
         const td = document.createElement('td');
         td.className = 'sts-day-cell';
         const title = status.affecting.map((n) => n.Title).filter(Boolean).join(', ') || 'Available';
-        td.innerHTML = `<span class="sts-dot ${dayStatusClass(status)}" title="${escapeHtml(title)}"></span>`;
+        td.innerHTML = `<span class="sts-dot ${dayStatusClass(status, true)}" title="${escapeHtml(title)}"></span>`;
         tr.appendChild(td);
     });
 
