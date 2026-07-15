@@ -133,6 +133,7 @@ function buildNoticeCard(notice) {
     card.className = 'sts-notice-card';
     card.innerHTML = `
         <div class="sts-notice-head">
+            <i class="fa fa-circle ${disruptive ? 'sts-dot-red fa-exclamation-circle' : 'sts-dot-blue fa-info-circle'}"></i>
             <span class="sts-pill ${disruptive ? 'sts-pill-red' : 'sts-pill-blue'}">${escapeHtml(outageType || (disruptive ? 'Disruption' : 'Notice'))}</span>
             <span class="sts-notice-title">${escapeHtml(notice.Title)}</span>
         </div>
@@ -209,9 +210,9 @@ function serviceDayStatus(service, notices, dayStart, dayEnd) {
  * Maps a serviceDayStatus() result to its status-dot modifier class.
  */
 function dayStatusClass(status) {
-    if (status.disruptive) return 'sts-dot-red';
-    if (status.noticeOnly) return 'sts-dot-blue';
-    return 'sts-dot-green';
+    if (status.disruptive) return 'sts-dot-red fa fa-exclamation-circle fa-circle-exclamation';
+    if (status.noticeOnly) return 'sts-dot-blue fa fa-info-circle fa-circle-info';
+    return 'sts-dot-green fa fa-circle fa-check-circle fa-circle-check';
 }
 
 /**
@@ -251,9 +252,9 @@ function buildUptimeBar(service, notices) {
     const legend = document.createElement('div');
     legend.className = 'sts-uptime-legend';
     legend.innerHTML = `
-        <span class="sts-legend-item"><span class="sts-dot sts-dot-green"></span>Normal</span>
-        <span class="sts-legend-item"><span class="sts-dot sts-dot-blue"></span>Service notice</span>
-        <span class="sts-legend-item"><span class="sts-dot sts-dot-red"></span>Disruption / outage</span>
+        <span class="sts-legend-item"><span class="sts-dot sts-dot-green fa fa-circle fa-check-circle fa-circle-check"></span>Normal</span>
+        <span class="sts-legend-item"><span class="sts-dot sts-dot-blue fa fa-info-circle fa-circle-info"></span>Service notice</span>
+        <span class="sts-legend-item"><span class="sts-dot sts-dot-red fa fa-exclamation-circle fa-circle-exclamation"></span>Disruption / outage</span>
     `;
     wrap.appendChild(legend);
 
@@ -441,7 +442,7 @@ function renderStatusPage(services, notices, options = {}) {
     const noticesSection = document.createElement('section');
     noticesSection.className = 'sts-notices';
     if (activeNotices.length === 0) {
-        noticesSection.innerHTML = '<div class="sts-allclear"><span class="sts-dot sts-dot-green"></span> All services are operating normally.</div>';
+        noticesSection.innerHTML = '<div class="sts-allclear"><span class="sts-dot sts-dot-green fa fa-check-circle fa-circle-check"></span> All services are operating normally.</div>';
     } else {
         const h2 = document.createElement('h2');
         h2.textContent = 'Active Notices';
