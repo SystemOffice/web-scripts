@@ -481,6 +481,7 @@ function renderError(message) {
  */
 function addCss() {
     const link = document.createElement('link');
+    const baseURL = document.currentScript.src.split('/').slice(0, -1).join('/') + '/';
     link.setAttribute('rel', 'stylesheet');
     link.setAttribute('href', baseURL + 'services-status.css');
     link.setAttribute('type', 'text/css');
@@ -556,6 +557,5 @@ async function initServicesStatus() {
     }
 }
 
-const baseURL = document.currentScript.src.split('/').slice(0, -1).join('/') + '/';
 addCss();
 initServicesStatus();
