@@ -210,9 +210,9 @@ function serviceDayStatus(service, notices, dayStart, dayEnd) {
  * Maps a serviceDayStatus() result to its status-dot modifier class.
  */
 function dayStatusClass(status) {
-    if (status.disruptive) return 'sts-dot-red fa fa-exclamation-circle fa-circle-exclamation';
-    if (status.noticeOnly) return 'sts-dot-blue fa fa-info-circle fa-circle-info';
-    return 'sts-dot-green fa fa-circle fa-check-circle fa-circle-check';
+    if (status.disruptive) return 'sts-dot-red';
+    if (status.noticeOnly) return 'sts-dot-blue';
+    return 'sts-dot-green';
 }
 
 /**
