@@ -315,6 +315,7 @@ function buildServiceRow(service, days, notices) {
     tr.tabIndex = 0;
     tr.setAttribute('role', 'button');
     tr.setAttribute('aria-expanded', 'false');
+    tr.dataset.serviceName = service.Name.toLowerCase();
 
     const nameCell = document.createElement('td');
     nameCell.className = 'sts-service-name-cell';
@@ -401,6 +402,50 @@ function buildServiceTable(services, notices, days) {
 }
 
 /**
+ * buildServiceSearch(tableWrap)
+ * Renders a text input that filters the given service table's rows by name
+ * as the user types. Filtered-out rows are hidden (and force-collapsed if
+ * their detail panel was open); shows a message when nothing matches.
+ */
+function buildServiceSearch(tableWrap) {
+    const wrap = document.createElement('div');
+    wrap.className = 'sts-search';
+
+    const input = document.createElement('input');
+    input.type = 'search';
+    input.className = 'sts-search-input';
+    input.placeholder = 'Filter services by name…';
+    input.setAttribute('aria-label', 'Filter services by name');
+    wrap.appendChild(input);
+
+    const empty = document.createElement('p');
+    empty.className = 'sts-search-empty';
+    empty.textContent = 'No services match your search.';
+    empty.hidden = true;
+    wrap.appendChild(empty);
+
+    const rows = Array.from(tableWrap.querySelectorAll('.sts-service-row'));
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim().toLowerCase();
+        let visibleCount = 0;
+        rows.forEach((row) => {
+            const match = !query || row.dataset.serviceName.includes(query);
+            row.hidden = !match;
+            if (!match) {
+                const detailRow = row.nextElementSibling;
+                if (detailRow) detailRow.hidden = true;
+                row.setAttribute('aria-expanded', 'false');
+            }
+            if (match) visibleCount += 1;
+        });
+        empty.hidden = visibleCount !== 0;
+    });
+
+    return wrap;
+}
+
+/**
  * getStatusContainer()
  * Finds the '#tdx-services-status' element to render into, creating and
  * appending one to <body> if it isn't already present on the page.
@@ -462,7 +507,9 @@ function renderStatusPage(services, notices, options = {}) {
     catSection.appendChild(hint);
 
     const days = getLastNDays(5);
-    catSection.appendChild(buildServiceTable(services, notices, days));
+    const table = buildServiceTable(services, notices, days);
+    catSection.appendChild(buildServiceSearch(table));
+    catSection.appendChild(table);
     container.appendChild(catSection);
 }
 

@@ -127,6 +127,29 @@
     color: #666;
 }
 
+#tdx-services-status .sts-search {
+    margin-bottom: 0.85rem;
+}
+
+#tdx-services-status .sts-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font: inherit;
+}
+
+#tdx-services-status .sts-search-input:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 1px;
+}
+
+#tdx-services-status .sts-search-empty {
+    margin: 0.6rem 0 0;
+    color: #666;
+}
+
 #tdx-services-status .sts-table-wrap {
     overflow-x: auto;
     padding-bottom: 0.65rem;
