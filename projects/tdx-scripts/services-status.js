@@ -137,7 +137,10 @@ const vendorIncidentsCache = new Map();
 /**
  * getVendorIncidents(url)
  * Fetches (and caches) a vendor's public Statuspage.io incident feed
- * (`{url}/api/v2/incidents.json`), returning its incidents array.
+ * (`{url}/api/v2/incidents.json`), returning its incidents array. Rejects
+ * on a failed request or on a response that isn't a valid Statuspage.io
+ * incidents feed (missing/non-array `incidents`), so callers can't mistake
+ * "invalid data" for "zero incidents".
  */
 function getVendorIncidents(url) {
     if (!vendorIncidentsCache.has(url)) {
@@ -146,7 +149,12 @@ function getVendorIncidents(url) {
                 if (!res.ok) throw new Error(`Vendor status request failed (${res.status})`);
                 return res.json();
             })
-            .then((data) => (data && data.incidents) || []));
+            .then((data) => {
+                if (!data || !Array.isArray(data.incidents)) {
+                    throw new Error('Vendor status response is not a valid Statuspage.io incidents feed');
+                }
+                return data.incidents;
+            }));
     }
     return vendorIncidentsCache.get(url);
 }
@@ -290,8 +298,10 @@ function enhanceActiveNoticesWithVendorStatus(noticesSection, services) {
  * that asynchronously fetches the vendor's public Statuspage.io incident
  * feed (`{url}/api/v2/incidents.json`) and lists recent incidents as brief
  * summaries linking out to the vendor's own incident page, plus a link to
- * the vendor's full status page. Returns null when the service has no
- * Vendor Status URL.
+ * the vendor's full status page. If that feed fails or isn't valid
+ * Statuspage.io data, the incident list is simply dropped, leaving just the
+ * link to the vendor's own status page. Returns null when the service has
+ * no Vendor Status URL.
  */
 function buildVendorStatusSection(service) {
     const url = serviceVendorStatusUrl(service);
@@ -328,7 +338,7 @@ function buildVendorStatusSection(service) {
         })
         .catch((err) => {
             console.warn('Unable to load vendor status for', service.Name, url, err);
-            body.textContent = 'Vendor status unavailable right now.';
+            body.remove();
         });
 
     return wrap;
