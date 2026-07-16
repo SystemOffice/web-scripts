@@ -8,7 +8,7 @@
  * Both endpoints return { Response: { DataRows: [...] } } JSON.
  */
 
-const SERVICES_REPORT_URL = 'https://us1.teamdynamix.com/tdapp/app/flow/api/v1/startdirect/vccs/prod/tdx-get-report?reportID=251486';
+const SERVICES_REPORT_URL = 'https://us1.teamdynamix.com/tdapp/app/flow/api/v1/startdirect/vccs/prod/tdx-get-report?reportID=297939';
 const NOTICES_REPORT_URL = 'https://us1.teamdynamix.com/tdapp/app/flow/api/v1/startdirect/vccs/prod/tdx-get-report?reportID=297780';
 
 /**
@@ -119,6 +119,150 @@ function noticeAffectsService(notice, serviceName) {
 }
 
 /**
+ * serviceVendorStatusUrl(service)
+ * Reads the service catalog's "Vendor Status URL" column (157626): the base
+ * URL of a vendor-hosted Statuspage.io page, or '' when the service has none.
+ */
+function serviceVendorStatusUrl(service) {
+    return (service['157626'] || '').trim().replace(/\/+$/, '');
+}
+
+/**
+ * vendorIncidentsCache
+ * Memoizes in-flight/completed vendor incident fetches by URL so the day
+ * cells and the expanded detail panel share a single request per service.
+ */
+const vendorIncidentsCache = new Map();
+
+/**
+ * getVendorIncidents(url)
+ * Fetches (and caches) a vendor's public Statuspage.io incident feed
+ * (`{url}/api/v2/incidents.json`), returning its incidents array.
+ */
+function getVendorIncidents(url) {
+    if (!vendorIncidentsCache.has(url)) {
+        vendorIncidentsCache.set(url, fetch(`${url}/api/v2/incidents.json`)
+            .then((res) => {
+                if (!res.ok) throw new Error(`Vendor status request failed (${res.status})`);
+                return res.json();
+            })
+            .then((data) => (data && data.incidents) || []));
+    }
+    return vendorIncidentsCache.get(url);
+}
+
+/**
+ * vendorStatusLabel(status)
+ * Formats a Statuspage.io incident "status" value (e.g. "in_progress") into
+ * a readable label (e.g. "In Progress").
+ */
+function vendorStatusLabel(status) {
+    return String(status || '')
+        .split('_')
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ') || 'Unknown';
+}
+
+/**
+ * vendorImpactStatus(impact)
+ * Maps a Statuspage.io incident "impact" value onto this page's disruption/
+ * notice vocabulary: major or critical impact is a disruption (red), minor
+ * impact is a notice (blue), none (or unrecognized) is normal (green).
+ */
+function vendorImpactStatus(impact) {
+    return {
+        disruptive: impact === 'major' || impact === 'critical',
+        noticeOnly: impact === 'minor',
+    };
+}
+
+/**
+ * vendorImpactPillClass(impact)
+ * Maps a Statuspage.io incident "impact" value to a pill color via
+ * vendorImpactStatus().
+ */
+function vendorImpactPillClass(impact) {
+    const status = vendorImpactStatus(impact);
+    return status.disruptive ? 'sts-pill-red' : status.noticeOnly ? 'sts-pill-blue' : 'sts-pill-green';
+}
+
+/**
+ * buildVendorIncidentSummary(incident)
+ * Renders a single Statuspage.io incident as a compact summary: a
+ * disruption/notice/normal icon and pill (by impact), name linked to the
+ * vendor's own incident page, and its date window. Update-by-update detail
+ * is intentionally left out; the link covers that.
+ */
+function buildVendorIncidentSummary(incident) {
+    const item = document.createElement('div');
+    item.className = 'sts-vendor-incident';
+    const status = vendorImpactStatus(incident.impact);
+    const iconClass = status.disruptive ? 'sts-dot-red fa-exclamation-circle' : status.noticeOnly ? 'sts-dot-blue fa-info-circle' : 'sts-dot-green fa-circle-check';
+    const start = incident.started_at || incident.created_at;
+    const end = incident.resolved_at || '';
+    item.innerHTML = `
+        <div class="sts-vendor-incident-head">
+            <i class="fa fa-circle ${iconClass}"></i>
+            <span class="sts-pill ${vendorImpactPillClass(incident.impact)}">${escapeHtml(vendorStatusLabel(incident.status))}</span>
+            <a class="sts-vendor-incident-title" href="${escapeHtml(incident.shortlink || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(incident.name)}</a>
+        </div>
+        <p class="sts-vendor-incident-window">${escapeHtml(formatDateTime(start))}${end ? ` &ndash; ${escapeHtml(formatDateTime(end))}` : ''}</p>
+    `;
+    return item;
+}
+
+/**
+ * buildVendorStatusSection(service)
+ * If the service has a Vendor Status URL, renders a "Vendor Status" panel
+ * that asynchronously fetches the vendor's public Statuspage.io incident
+ * feed (`{url}/api/v2/incidents.json`) and lists recent incidents as brief
+ * summaries linking out to the vendor's own incident page, plus a link to
+ * the vendor's full status page. Returns null when the service has no
+ * Vendor Status URL.
+ */
+function buildVendorStatusSection(service) {
+    const url = serviceVendorStatusUrl(service);
+    if (!url) return null;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'sts-vendor-status';
+
+    const heading = document.createElement('h4');
+    heading.textContent = 'Vendor Status';
+    wrap.appendChild(heading);
+
+    const body = document.createElement('div');
+    body.className = 'sts-vendor-status-body';
+    body.textContent = 'Loading vendor status…';
+    wrap.appendChild(body);
+
+    const link = document.createElement('a');
+    link.className = 'sts-vendor-status-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'View full vendor status page →';
+    wrap.appendChild(link);
+
+    getVendorIncidents(url)
+        .then((incidents) => {
+            body.innerHTML = '';
+            if (incidents.length === 0) {
+                body.textContent = 'No incidents reported.';
+                return;
+            }
+            incidents.slice(0, 5).forEach((incident) => body.appendChild(buildVendorIncidentSummary(incident)));
+        })
+        .catch((err) => {
+            console.warn('Unable to load vendor status for', service.Name, url, err);
+            body.textContent = 'Vendor status unavailable right now.';
+        });
+
+    return wrap;
+}
+
+/**
  * buildNoticeCard(notice)
  * Renders a single notice as a DOM element: its outage-type pill (blue for
  * informational notices, red for disruptions/outages), the system it
@@ -206,6 +350,68 @@ function serviceDayStatus(service, notices, dayStart, dayEnd) {
 }
 
 /**
+ * vendorIncidentOverlapsDay(incident, dayStart, dayEnd)
+ * True if a vendor incident's started_at/resolved_at window overlaps the
+ * given day bounds. A missing resolved_at is treated as still-ongoing.
+ */
+function vendorIncidentOverlapsDay(incident, dayStart, dayEnd) {
+    const start = incident.started_at || incident.created_at;
+    if (!start) return false;
+    const s = new Date(start);
+    const e = incident.resolved_at ? new Date(incident.resolved_at) : null;
+    if (s > dayEnd) return false;
+    if (e && e < dayStart) return false;
+    return true;
+}
+
+/**
+ * vendorDayStatus(vendorIncidents, dayStart, dayEnd)
+ * Determines the vendor-incident status on a given day, using the same
+ * disruptive/notice-only vocabulary as serviceDayStatus (mapped from
+ * incident impact via vendorImpactStatus()).
+ */
+function vendorDayStatus(vendorIncidents, dayStart, dayEnd) {
+    const affecting = vendorIncidents.filter((i) => vendorIncidentOverlapsDay(i, dayStart, dayEnd));
+    const flags = affecting.map((i) => vendorImpactStatus(i.impact));
+    const disruptive = flags.some((f) => f.disruptive);
+    return {
+        vendorIncidents: affecting,
+        disruptive,
+        noticeOnly: !disruptive && flags.some((f) => f.noticeOnly),
+    };
+}
+
+/**
+ * combineDayStatus(statuses)
+ * Combines several day-status objects (e.g. TDX notices + vendor incidents)
+ * into one: disruptive wins over notice-only wins over normal. Keeps the
+ * TDX notice list and vendor incident list separately for tooltip text.
+ */
+function combineDayStatus(statuses) {
+    const disruptive = statuses.some((s) => s.disruptive);
+    const noticeOnly = !disruptive && statuses.some((s) => s.noticeOnly);
+    return {
+        affecting: statuses.flatMap((s) => s.affecting || []),
+        vendorIncidents: statuses.flatMap((s) => s.vendorIncidents || []),
+        disruptive,
+        noticeOnly,
+    };
+}
+
+/**
+ * dayCellTitle(status)
+ * Builds a day cell's tooltip text from its TDX notice titles and any
+ * merged vendor incident names, falling back to "Available".
+ */
+function dayCellTitle(status) {
+    const parts = [
+        ...(status.affecting || []).map((n) => n.Title).filter(Boolean),
+        ...(status.vendorIncidents || []).map((i) => i.name).filter(Boolean),
+    ];
+    return parts.join(', ') || 'Available';
+}
+
+/**
  * dayStatusClass(status, includeIcon)
  * Maps a serviceDayStatus() result to its status-dot modifier class.
  */
@@ -223,10 +429,23 @@ function dayStatusClass(status, includeIcon = false) {
 }
 
 /**
+ * renderUptimeSegment(seg, status, date)
+ * Fills a single uptime-bar day segment with its status color and tooltip,
+ * from a serviceDayStatus()/combineDayStatus() result.
+ */
+function renderUptimeSegment(seg, status, date) {
+    seg.className = `sts-uptime-seg ${dayStatusClass(status)}`;
+    const state = status.disruptive ? 'Disruption/outage' : status.noticeOnly ? 'Service notice' : 'Normal';
+    seg.title = `${formatDate(date)}: ${state}`;
+}
+
+/**
  * buildUptimeBar(service, notices)
  * Renders a horizontal, day-by-day history bar for the last
  * UPTIME_BAR_DAYS days: green segments for normal operation, blue for
- * informational notices, red for disruptions/outages.
+ * informational notices, red for disruptions/outages. Segments are drawn
+ * immediately from TDX notices, then re-rendered once with vendor incidents
+ * merged in, if the service has a Vendor Status URL.
  */
 function buildUptimeBar(service, notices) {
     const days = getLastNDays(UPTIME_BAR_DAYS);
@@ -241,15 +460,29 @@ function buildUptimeBar(service, notices) {
 
     const bar = document.createElement('div');
     bar.className = 'sts-uptime-bar';
-    days.forEach(({ date, start, end }) => {
+    const segments = days.map(({ date, start, end }) => {
         const status = serviceDayStatus(service, notices, start, end);
         const seg = document.createElement('span');
-        seg.className = `sts-uptime-seg ${dayStatusClass(status)}`;
-        const state = status.disruptive ? 'Disruption/outage' : status.noticeOnly ? 'Service notice' : 'Normal';
-        seg.title = `${formatDate(date)}: ${state}`;
+        renderUptimeSegment(seg, status, date);
         bar.appendChild(seg);
+        return { seg, date, start, end };
     });
     wrap.appendChild(bar);
+
+    const vendorUrl = serviceVendorStatusUrl(service);
+    if (vendorUrl) {
+        getVendorIncidents(vendorUrl)
+            .then((vendorIncidents) => {
+                segments.forEach(({ seg, date, start, end }) => {
+                    const base = serviceDayStatus(service, notices, start, end);
+                    const vendor = vendorDayStatus(vendorIncidents, start, end);
+                    renderUptimeSegment(seg, combineDayStatus([base, vendor]), date);
+                });
+            })
+            .catch((err) => {
+                console.warn('Unable to merge vendor status into uptime bar for', service.Name, err);
+            });
+    }
 
     const range = document.createElement('div');
     range.className = 'sts-uptime-range';
@@ -298,15 +531,27 @@ function buildHistoryList(service, notices) {
 
 /**
  * buildServiceDetail(service, notices)
- * Renders the expanded detail panel for a service: its uptime bar followed
- * by its full notice history.
+ * Renders the expanded detail panel for a service: its uptime bar, an
+ * optional vendor status summary (when a Vendor Status URL is set), and its
+ * full notice history.
  */
 function buildServiceDetail(service, notices) {
     const wrap = document.createElement('div');
     wrap.className = 'sts-detail';
     wrap.appendChild(buildUptimeBar(service, notices));
+    const vendorSection = buildVendorStatusSection(service);
+    if (vendorSection) wrap.appendChild(vendorSection);
     wrap.appendChild(buildHistoryList(service, notices));
     return wrap;
+}
+
+/**
+ * renderDayCell(td, status)
+ * Fills a day cell with its status dot/icon and tooltip, from a
+ * serviceDayStatus()/combineDayStatus() result.
+ */
+function renderDayCell(td, status) {
+    td.innerHTML = `<span class="sts-dot ${dayStatusClass(status, true)}" title="${escapeHtml(dayCellTitle(status))}"></span>`;
 }
 
 /**
@@ -314,7 +559,9 @@ function buildServiceDetail(service, notices) {
  * Builds a clickable service row (with one status-dot cell per day) and its
  * paired, initially-hidden detail row. Clicking or activating the service
  * row toggles the detail row, lazily building its content (uptime bar +
- * notice history) on first expand. Returns [row, detailRow].
+ * notice history) on first expand. Day cells are rendered immediately from
+ * TDX notices, then re-rendered once with vendor incidents merged in, if
+ * the service has a Vendor Status URL. Returns [row, detailRow].
  */
 function buildServiceRow(service, days, notices) {
     const tr = document.createElement('tr');
@@ -330,14 +577,29 @@ function buildServiceRow(service, days, notices) {
     nameCell.appendChild(document.createTextNode(service.Name));
     tr.appendChild(nameCell);
 
-    days.forEach(({ start, end }) => {
+    const dayCells = days.map(({ start, end }) => {
         const status = serviceDayStatus(service, notices, start, end);
         const td = document.createElement('td');
         td.className = 'sts-day-cell';
-        const title = status.affecting.map((n) => n.Title).filter(Boolean).join(', ') || 'Available';
-        td.innerHTML = `<span class="sts-dot ${dayStatusClass(status, true)}" title="${escapeHtml(title)}"></span>`;
+        renderDayCell(td, status);
         tr.appendChild(td);
+        return { td, start, end };
     });
+
+    const vendorUrl = serviceVendorStatusUrl(service);
+    if (vendorUrl) {
+        getVendorIncidents(vendorUrl)
+            .then((vendorIncidents) => {
+                dayCells.forEach(({ td, start, end }) => {
+                    const base = serviceDayStatus(service, notices, start, end);
+                    const vendor = vendorDayStatus(vendorIncidents, start, end);
+                    renderDayCell(td, combineDayStatus([base, vendor]));
+                });
+            })
+            .catch((err) => {
+                console.warn('Unable to merge vendor status into day cells for', service.Name, err);
+            });
+    }
 
     const detailTr = document.createElement('tr');
     detailTr.className = 'sts-detail-row';
@@ -558,7 +820,7 @@ const IS_TDX_ORIGIN = /(^|\.)teamdynamix\.com$/i.test(location.hostname);
  * names.
  */
 const SAMPLE_SERVICES = [
-    { ID: 1, Name: 'Canvas' },
+    { ID: 1, Name: 'Canvas', '157626': 'https://status.instructure.com' },
     { ID: 2, Name: 'Zoom' },
     { ID: 3, Name: 'myVCCS Portal' },
     { ID: 4, Name: 'Multi-Factor Authentication' },

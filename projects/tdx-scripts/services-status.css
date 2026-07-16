@@ -170,6 +170,11 @@
   color: var(--color-primary);
 }
 
+#tdx-services-status .sts-pill-green {
+  background: rgba(63, 164, 95, 0.12);
+  color: var(--color-success-text);
+}
+
 /* ---------- All Services section ---------- */
 
 #tdx-services-status .sts-services-hint {
@@ -314,6 +319,68 @@
 #tdx-services-status .sts-history-empty {
   margin: 0;
   color: var(--color-on-surface-muted);
+}
+
+#tdx-services-status .sts-vendor-status {
+  margin-top: 16px;
+}
+
+#tdx-services-status .sts-vendor-status h4 {
+  margin: 0 0 8px;
+  font-family: var(--font-slab);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+#tdx-services-status .sts-vendor-status-body {
+  color: var(--color-on-surface-muted);
+  font-size: 14px;
+}
+
+#tdx-services-status .sts-vendor-incident {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--color-surface);
+}
+
+#tdx-services-status .sts-vendor-incident-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#tdx-services-status .sts-vendor-incident-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+#tdx-services-status .sts-vendor-incident-title:hover {
+  text-decoration: underline;
+}
+
+#tdx-services-status .sts-vendor-incident-window {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-on-surface-muted);
+}
+
+#tdx-services-status .sts-vendor-status-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+#tdx-services-status .sts-vendor-status-link:hover {
+  text-decoration: underline;
 }
 
 #tdx-services-status .sts-uptime-label {
