@@ -218,7 +218,8 @@ function buildVendorIncidentSummary(incident) {
  * (incidents) or completed (scheduled maintenances).
  */
 function isVendorIncidentActive(incident) {
-    return incident.status !== 'resolved' && incident.status !== 'completed';
+    const inactiveStatuses = ['resolved', 'completed', 'postmortem'];
+    return !inactiveStatuses.includes(String(incident.status).toLowerCase());
 }
 
 /**
