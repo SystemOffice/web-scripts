@@ -213,6 +213,77 @@ function buildVendorIncidentSummary(incident) {
 }
 
 /**
+ * isVendorIncidentActive(incident)
+ * A vendor incident is active unless the vendor has marked it resolved
+ * (incidents) or completed (scheduled maintenances).
+ */
+function isVendorIncidentActive(incident) {
+    return incident.status !== 'resolved' && incident.status !== 'completed';
+}
+
+/**
+ * buildActiveVendorNoticeCard(service, incident)
+ * Renders an active vendor incident as a top-level notice card, matching
+ * buildNoticeCard's layout: impact icon/pill, the service it affects, the
+ * latest update's text (escaped as plain text, unlike TDX's rich-HTML
+ * Description), and a link to the vendor's own incident page rather than
+ * incorporating every update.
+ */
+function buildActiveVendorNoticeCard(service, incident) {
+    const status = vendorImpactStatus(incident.impact);
+    const iconClass = status.disruptive ? 'sts-dot-red fa-exclamation-circle' : status.noticeOnly ? 'sts-dot-blue fa-info-circle' : 'sts-dot-green fa-circle-check';
+    const start = incident.started_at || incident.created_at;
+    const latestUpdate = (incident.incident_updates && incident.incident_updates[0] && incident.incident_updates[0].body) || '';
+    const card = document.createElement('div');
+    card.className = 'sts-notice-card';
+    card.innerHTML = `
+        <div class="sts-notice-head">
+            <i class="fa fa-circle ${iconClass}"></i>
+            <span class="sts-pill ${vendorImpactPillClass(incident.impact)}">${escapeHtml(vendorStatusLabel(incident.status))}</span>
+            <span class="sts-notice-title">${escapeHtml(incident.name)}</span>
+        </div>
+        <p class="sts-notice-system">${escapeHtml(service.Name)}</p>
+        ${latestUpdate ? `<p class="sts-notice-desc">${escapeHtml(latestUpdate)}</p>` : ''}
+        <p class="sts-notice-window">${escapeHtml(formatDateTime(start))}</p>
+        <a class="sts-vendor-status-link" href="${escapeHtml(incident.shortlink || '#')}" target="_blank" rel="noopener noreferrer">View vendor status details →</a>
+    `;
+    return card;
+}
+
+/**
+ * enhanceActiveNoticesWithVendorStatus(noticesSection, services)
+ * Asynchronously gathers each vendor-linked service's active incidents
+ * (via the shared getVendorIncidents() cache) and, if any are found, adds
+ * them to the already-rendered Active Notices section — replacing the
+ * "all clear" state if that's what was shown initially.
+ */
+function enhanceActiveNoticesWithVendorStatus(noticesSection, services) {
+    const withUrl = services.filter((s) => serviceVendorStatusUrl(s));
+    if (withUrl.length === 0) return;
+
+    Promise.all(withUrl.map((service) => {
+        const url = serviceVendorStatusUrl(service);
+        return getVendorIncidents(url)
+            .then((incidents) => incidents.filter(isVendorIncidentActive).map((incident) => ({ service, incident })))
+            .catch((err) => {
+                console.warn('Unable to load vendor status for', service.Name, url, err);
+                return [];
+            });
+    })).then((results) => {
+        const active = results.flat();
+        if (active.length === 0) return;
+
+        if (noticesSection.querySelector('.sts-allclear')) {
+            noticesSection.innerHTML = '';
+            const h2 = document.createElement('h2');
+            h2.textContent = 'Active Notices';
+            noticesSection.appendChild(h2);
+        }
+        active.forEach(({ service, incident }) => noticesSection.appendChild(buildActiveVendorNoticeCard(service, incident)));
+    });
+}
+
+/**
  * buildVendorStatusSection(service)
  * If the service has a Vendor Status URL, renders a "Vendor Status" panel
  * that asynchronously fetches the vendor's public Statuspage.io incident
@@ -764,6 +835,7 @@ function renderStatusPage(services, notices, options = {}) {
         activeNotices.forEach((n) => noticesSection.appendChild(buildNoticeCard(n)));
     }
     container.appendChild(noticesSection);
+    enhanceActiveNoticesWithVendorStatus(noticesSection, services);
 
     const catSection = document.createElement('section');
     catSection.className = 'sts-services';
