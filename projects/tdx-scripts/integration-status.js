@@ -32,8 +32,8 @@ const SERVICES = [
 { name: 'Zoom', base: 'https://www.zoomstatus.com', type: 'statuspage' },
 { name: 'Honorlock', base: 'https://status.honorlock.com', type: 'statuspage' },
 {
-name: 'Qwickly', base: 'https://stats.uptimerobot.com/A72WoHZ7gP/', type: 'uptimerobot',
-pageId: 'qZQijKKCt2',
+name: 'Qwickly', base: 'https://stats.uptimerobot.com', type: 'uptimerobot',
+pageId: 'A72WoHZ7gP',
 },
 { name: 'Pearson', base: 'https://status.pearson.com', type: 'link' },
 { name: 'Cengage', base: 'https://techcheck.cengage.com', type: 'link' },
@@ -184,6 +184,14 @@ unknown: 'fa-solid fa-circle-question',
 none: 'fa-solid fa-minus',
 };
 
+/** getServiceUrl(service): the public status page URL for a service's "View status page" link. */
+function getServiceUrl(service) {
+if (service.type === 'uptimerobot' && service.base === 'https://stats.uptimerobot.com') {
+return `${service.base}/${service.pageId}`;
+}
+return service.base;
+}
+
 /** buildCard(service): the DOM node for one service tile (initial "checking" state). */
 function buildCard(service) {
 const card = document.createElement('div');
@@ -207,7 +215,7 @@ card.appendChild(updated);
 if (service.base) {
 const link = document.createElement('a');
 link.className = 'is-link';
-link.href = service.base;
+link.href = getServiceUrl(service);
 link.target = '_blank';
 link.rel = 'noopener';
 link.textContent = 'View status page \u2197';
