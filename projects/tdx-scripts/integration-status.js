@@ -32,8 +32,8 @@ const SERVICES = [
 { name: 'Zoom', base: 'https://www.zoomstatus.com', type: 'statuspage' },
 { name: 'Honorlock', base: 'https://status.honorlock.com', type: 'statuspage' },
 {
-name: 'Qwickly', base: 'https://stats.uptimerobot.com/A72WHZ7gP', type: 'link',
-note: 'Link in source doc returns 404 - needs an updated status page URL',
+name: 'Qwickly', base: 'https://stats.uptimerobot.com/A72WoHZ7gP/', type: 'uptimerobot',
+pageId: 'qZQijKKCt2',
 },
 { name: 'Pearson', base: 'https://status.pearson.com', type: 'link' },
 { name: 'Cengage', base: 'https://techcheck.cengage.com', type: 'link' },
