@@ -1,0 +1,141 @@
+/**
+* integration-status.css
+* Styling for the Canvas 3rd-party integration status dashboard.
+* Reuses the color tokens from services-status.css for visual consistency.
+*/
+
+#integration-status {
+  --color-primary: #00539B;
+  --color-primary-dark: #003D6B;
+  --color-success: #3FA45F;
+  --color-success-text: #2A7A44;
+  --color-warning: #B98900;
+  --color-warning-text: #8A6800;
+  --color-accent: #98002E;
+  --color-accent-deep: #8B1F41;
+  --color-surface: #FFFFFF;
+  --color-surface-primary-tint: #F2F6FA;
+  --color-surface-muted-tint: #F4F4F5;
+  --color-on-surface: #2D2D2D;
+  --color-on-surface-muted: #636363;
+  --color-border: #E2E8F0;
+  --color-link: #0066CC;
+
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-on-surface);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+#integration-status .is-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+#integration-status .is-header h1 {
+  font-size: 1.5rem;
+  color: var(--color-primary-dark);
+  margin: 0;
+}
+
+#integration-status .is-meta {
+  color: var(--color-on-surface-muted);
+  font-size: 0.85rem;
+}
+
+#integration-status .is-refresh-btn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+#integration-status .is-refresh-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+#integration-status .is-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+#integration-status .is-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#integration-status .is-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#integration-status .is-icon {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+#integration-status .is-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+#integration-status .is-label {
+  font-size: 0.85rem;
+  padding-left: 30px;
+}
+
+#integration-status .is-updated {
+  font-size: 0.75rem;
+  color: var(--color-on-surface-muted);
+  padding-left: 30px;
+}
+
+#integration-status .is-link {
+  font-size: 0.8rem;
+  padding-left: 30px;
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+#integration-status .is-link:hover { text-decoration: underline; }
+
+#integration-status .is-note {
+  font-size: 0.75rem;
+  padding-left: 30px;
+  color: var(--color-warning-text);
+  font-style: italic;
+}
+
+/* Status states */
+#integration-status .is-operational .is-icon { color: var(--color-success); }
+#integration-status .is-operational .is-label { color: var(--color-success-text); }
+
+#integration-status .is-issue .is-icon { color: var(--color-warning); }
+#integration-status .is-issue .is-label { color: var(--color-warning-text); }
+
+#integration-status .is-outage .is-icon { color: var(--color-accent); }
+#integration-status .is-outage .is-label { color: var(--color-accent-deep); }
+
+#integration-status .is-unknown .is-icon,
+#integration-status .is-none .is-icon { color: var(--color-on-surface-muted); }
+#integration-status .is-unknown .is-label,
+#integration-status .is-none .is-label { color: var(--color-on-surface-muted); }
+#integration-status .is-unknown .is-card,
+#integration-status .is-none .is-card { background: var(--color-surface-muted-tint); }
