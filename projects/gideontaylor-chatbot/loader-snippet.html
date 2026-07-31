@@ -1,0 +1,57 @@
+<!--
+  VPCC chatbot loader — embed this exact snippet in EVERY page template
+  (footer / global include), not just the homepage.
+
+  Why this exists: the homepage already has a hand-written loader like this
+  one (id="vpcc-delayed-chat-loader") that defers the chatbot until the
+  user actually interacts with the page. Other templates — including
+  /admissions/apply/, the site's highest-stakes conversion page — instead
+  load the chatbot's full ~811 KiB chain unconditionally in <head>, which is
+  what blocks the critical path on those pages. This snippet is that same
+  homepage logic, generalized to go on every page, pointed at our
+  self-hosted/optimized mirror instead of the vendor's own URL.
+
+  BEFORE using this: replace {{VERSION}} below with the git tag you just
+  released (see README.md "Releasing a new version"). Do not point this at
+  "@main" — jsDelivr only gives long-lived caching to a pinned tag/commit,
+  which is the whole point of fix #2 (the 1-minute-cache env config file).
+
+  What changed vs. the vendor's own <script> embed:
+    - src points at our jsDelivr-hosted, minified, patched mirror instead
+      of chatui.ida.gideontaylor.com directly (fixes #2 cache lifetime and
+      #3 minification; the mirrored CSS also carries the #4 animation fix).
+    - Loading is deferred until user interaction (or, on non-mobile
+      viewports only, after a short idle period) instead of firing
+      synchronously in <head> (fixes #1, the critical-path blocker).
+
+  What's preserved on purpose, unchanged from the existing homepage logic:
+    - On mobile, the chatbot ONLY loads on interaction — there is no idle
+      fallback. A mobile visitor who never touches/scrolls/types never
+      loads it. That's an intentional trade-off (it's what keeps Lighthouse
+      mobile scores clean, since Lighthouse doesn't simulate interaction),
+      not an oversight. If you want mobile visitors to eventually get the
+      chatbot even without interaction, that's a real product decision to
+      make deliberately — talk to whoever owns this trade-off before
+      changing it, don't just delete the `matchMedia` check.
+-->
+<script id="IS_CV_PUBLIC_HOOK_LOADER">
+(function () {
+    var loaded = false;
+    function loadChat() {
+        if (loaded || document.getElementById('IS_CV_PUBLIC_HOOK')) return;
+        loaded = true;
+        var s = document.createElement('script');
+        s.id = 'IS_CV_PUBLIC_HOOK';
+        s.src = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@{{VERSION}}/projects/gideontaylor-chatbot/dist/IS_CV_PUBLIC_HOOK.js';
+        s.async = true;
+        s.setAttribute('data-org', 'VCCS_TN');
+        document.head.appendChild(s);
+    }
+    ['pointerdown', 'touchstart', 'keydown'].forEach(function (e) {
+        window.addEventListener(e, loadChat, { once: true, passive: true });
+    });
+    if (!matchMedia('(max-width: 767px)').matches) {
+        window.requestIdleCallback ? requestIdleCallback(loadChat, { timeout: 6000 }) : setTimeout(loadChat, 5000);
+    }
+})();
+</script>

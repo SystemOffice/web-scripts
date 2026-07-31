@@ -1,0 +1,31 @@
+/* ------------------------------------------------------------------------ 
+   CLIENT_CV_OB_REMOTE_STYLES.css
+
+   Put any client themes and custom styles in this file. 
+   Be sure to:
+        1) Uncomment CLIENT_CV_OB_REMOTE_STYLES in the IS_CV_PUBLIC_HOOK.js
+        2) If a custom theme is added, update the theme property in IS_CV_OB_SETTINGS_SDK.js, 
+
+   ------------------------------------------------------------------------ */
+
+   /* Responsive medium form factor */
+@media (max-width: 767px) {
+
+	.isCV_PublicChat #isChatIconWrapper #isChatWelcomeBubble #isChatWelcomeText {
+		font-size: 12px;
+		margin: 10px 15px;
+		width: 115px !important;
+	}
+}
+body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper, 
+body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper .oda-chat-message-icon {
+	filter:revert;
+}
+body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper, body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper .oda-chat-message-icon {
+   height: 40px;
+   width: 40px;
+}
+body .oda-chat-wrapper .oda-chat-right .oda-chat-icon-wrapper, body .oda-chat-wrapper .oda-chat-right .oda-chat-icon-wrapper .oda-chat-message-icon {
+   height: 40px;
+   width: 40px;
+}

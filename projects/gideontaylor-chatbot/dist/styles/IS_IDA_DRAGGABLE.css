@@ -1,0 +1,1 @@
+body #isCV_PublicChat,body .oda-chat-button{position:absolute}body .oda-chat-wrapper .oda-chat-button-drag-handle{display:none!important}body.ida-is-dragging *{pointer-events:none!important}body.ida-is-dragging #idalogin{pointer-events:auto!important}body .oda-chat-button{transition:none!important}
