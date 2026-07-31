@@ -400,17 +400,25 @@ setupTabs();
 /**
  * Injects the VCCS chat hook script when on the designated help page URL.
  */
-function addVCCSChat() {
+function addVCCSChat(dataOrg='VCCS_SYS') {
     if (document.location.href.indexOf('help.vccs.edu/SBTDClient/1981') > -1) {
-        const scriptObj = document.createElement('script');
-        scriptObj.dataset.org = "VCCS_SYS";
-        scriptObj.id = "IS_CV_PUBLIC_HOOK";
-        scriptObj.src = "https://vccs-dev-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js";
-        scriptObj.type = "text/javascript";
-
-        loadScriptAsync(scriptObj)
-            .then(() => console.log('script loaded successfully'))
-            .catch(error => console.error(error));
+        var loaded = false;
+        function loadChat() {
+            if (loaded || document.getElementById('IS_CV_PUBLIC_HOOK')) return;
+            loaded = true;
+            var s = document.createElement('script');
+            s.id = 'IS_CV_PUBLIC_HOOK';
+            s.src = 'https://cdn.jsdelivr.net/gh/SystemOffice/web-scripts@latest/projects/gideontaylor-chatbot/dist/IS_CV_PUBLIC_HOOK.js';
+            s.async = true;
+            s.setAttribute('data-org', dataOrg);
+            document.head.appendChild(s);
+        }
+        ['pointerdown', 'touchstart', 'keydown'].forEach(function (e) {
+            window.addEventListener(e, loadChat, { once: true, passive: true });
+        });
+        if (!matchMedia('(max-width: 767px)').matches) {
+            window.requestIdleCallback ? requestIdleCallback(loadChat, { timeout: 6000 }) : setTimeout(loadChat, 5000);
+        }
     }
 }
 
