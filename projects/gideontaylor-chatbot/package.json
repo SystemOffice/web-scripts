@@ -1,0 +1,16 @@
+{
+  "name": "gideontaylor-chatbot-wip",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted, optimized mirror of the Gideon Taylor / IDA chatbot (chatui.ida.gideontaylor.com) used on vpcc.edu. Defers loading, fixes the chatbot's asset cache lifetimes via jsDelivr, minifies its JS/CSS, and patches the welcome-bubble animation to use transform/opacity instead of width.",
+  "type": "module",
+  "scripts": {
+    "fetch-vendor": "node scripts/fetch-vendor.mjs",
+    "check-updates": "node scripts/check-updates.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "terser": "^5.44.1",
+    "csso": "^5.0.5"
+  }
+}

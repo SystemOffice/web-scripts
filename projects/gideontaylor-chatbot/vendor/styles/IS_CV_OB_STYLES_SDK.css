@@ -1,0 +1,1120 @@
+/* -------------------------------------------------------------------
+   IS_CV_OB_STYLES_SDK.css
+
+   This is the base Ida Widget SDK styles.
+   ------------------------------------------------------------------- */
+/* revert style in the new SDK wrapper 12/9/24 */
+ .oda-chat-wrapper * {
+    position: unset;
+    margin: revert;
+    padding: revert;
+    list-style: revert;
+    list-style-type: revert;
+    font-size: revert;
+    font-family: revert;
+    font-style: revert;
+    font-weight: revert;
+    min-height: revert;
+    text-transform: revert;
+}
+
+.oda-chat-message-bubble *:nth-last-child(2),
+.oda-chat-message-bubble *:nth-last-child(1){
+    margin-bottom: 0px;
+}
+
+.oda-chat-message-bubble button:nth-last-child(2),
+.oda-chat-message-bubble button:nth-last-child(1){
+    margin-bottom: 8px;
+}
+
+.oda-chat-message-bubble *:first-child{
+    margin-top: 0px;
+}
+
+small.is-cv-chat-message-footer {
+    font-style: italic;
+}
+/* end 12/9/24 */
+
+/* Public chat items */
+.isCV_PublicChat {
+	position: fixed;
+	/*
+	bottom: 40px;
+	right: 40px;
+	*/
+	bottom: 20px;
+	right: 20px;
+	z-index: 204;
+	width: 1px;
+    height: 1px;
+
+}
+
+.isCV_PublicChat .isChatBadge {
+	z-index: 206;
+}
+
+.isCV_PublicLogin {
+	position: fixed;
+	bottom: 100px;
+	right: 0;
+	width: 250px;
+	background-color: #FFF;
+	padding: 15px;
+	box-shadow: grey 0px 0px 10px;
+	border-radius: 10px;
+}
+
+.isCV_PublicLogin > span {
+	font-weight: bold;
+	font-size: 18px;
+	color: #31435D;
+}
+
+a.isCV_PublicLoginButton {
+	float: left;
+	background-color: #5196FC;
+	width: 100%;
+	margin-top: 15px;
+	color: #FFF;
+	text-align: center;
+	line-height: 35px;
+	border-radius: 5px;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a.isCV_PublicLoginButton:hover {
+	color: #FFF;
+	text-decoration: underline;
+}
+
+.hide {
+	display: none !important;
+}
+
+/* NOTE: These are old, but look to see if we want to apply to new widget DOM.
+
+.chat-widget-web-widget.chat-widget-web-standalone * {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.chat-widget-web-widget.chat-widget-web-standalone p:nth-child(1) {
+	margin: 0;
+	padding: 0;
+}
+
+.chat-widget-web-widget.chat-widget-web-standalone input {
+	font-size: 16px;
+}
+
+---------------------- */
+
+/* Chatbot styles needed ----------------------------- */
+body .oda-chat-wrapper {
+	z-index: 205;    
+}
+
+body .oda-chat-wrapper .oda-chat-widget {
+	z-index: 200;
+}
+
+body .oda-chat-wrapper .oda-chat-widget.ida-anim {
+	transition: width 0.2s;
+}
+
+body .oda-chat-wrapper .oda-chat-right .oda-chat-icon-wrapper, 
+body .oda-chat-wrapper .oda-chat-right .oda-chat-icon-wrapper .oda-chat-message-icon {
+	height: 20px;
+	width: 20px;
+	filter: var(--filter-user-avatar);
+}
+body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper, 
+body .oda-chat-wrapper .oda-chat-left .oda-chat-icon-wrapper .oda-chat-message-icon {
+	height: 20px;
+	width: 20px;
+	filter: invert(34%) sepia(7%) saturate(261%) hue-rotate(182deg) brightness(95%) contrast(94%);
+	/* color: black; */
+}
+/* force dark themed filter for Oracle delivered dark themes */
+body .oda-chat-wrapper.oda-chat-redwood-dark .oda-chat-icon-wrapper .oda-chat-message-icon {
+	filter: var(--filter-avatar-dark-theme);
+}
+
+body .oda-chat-wrapper .oda-chat-header .oda-chat-logo {
+	filter: var(--filter-header-logo);
+}
+/* force dark themed filter for Oracle delivered dark themes */
+body .oda-chat-wrapper.oda-chat-redwood-dark .oda-chat-header .oda-chat-logo {   
+	filter: var(--filter-header-logo-dark-theme);
+}
+
+/* Chatbot Launch styles ----------------------------------- */
+body .oda-chat-wrapper .oda-chat-button {
+	width: 75px;
+	height: 75px;
+	border-radius: 100%;
+	background-size: 35px;
+	background-position: center;
+	background-repeat: no-repeat;
+	box-shadow: grey 0px 0px 10px;
+}
+
+body .oda-chat-wrapper .oda-chat-button img {
+	width: 35px;
+	height: 35px;
+}
+
+
+/* ---------- sample transition ----------------------
+body .oda-chat-wrapper .oda-chat-button {
+	right: -30px;
+	transition: 0.5s;
+}
+
+body .oda-chat-wrapper .oda-chat-button.is-hover {
+	right: 0;
+	
+}
+----------------------------------------------------- */
+
+/* Webform container --------------------------------- */
+.chat-widget-web-IS_CV_WEB_CONTAINER {
+	z-index: 207;
+}
+
+#IS_CV_WEB_CONTAINER {
+	position: absolute;
+	top: 30px;    
+	height: calc(100% - 30px); 
+	width: 92%; 
+	left: 0;
+	right: 0;
+	margin: 0 auto;
+	background: var(--color-conversation-background);
+	border: #DDDDDD;
+	box-shadow: 0px -4px 15px rgb(0 0 0 / 40%); /* 0px -4px 32px rgb(0 0 0 / 10%); */
+}
+
+/* Mobile branding for embedded eForm Fluid Components */
+@media (max-width: 450px) {
+
+	#IS_CV_WEB_CONTAINER {
+		top: 0;    
+		height: 100%; 
+		width: 100%;
+	}
+	.isCV_PublicChat {
+		bottom:-24px;
+		right:36px;
+	}
+	.oda-chat-wrapper .oda-chat-button {
+		right:15px;
+		bottom:-18px;
+	}
+	/* Fix for iphone MAX 10/21/25 */
+	.oda-chat-wrapper:not(.oda-chat-embedded).oda-chat-pos-left .oda-chat-widget:not(.oda-chat-sidepanel) {
+        max-width: 100% !important;
+    }
+
+	
+
+}
+
+.oda-chat-wrapper .chat-widget-web-IS_CV_WEB_CONTAINER .oda-chat-header {
+	height: 56px;
+	padding: 0 8px;
+	/* background-color: var(--color-header-background); */
+	color: var(--color-text);
+	background: var(--color-conversation-background);
+}
+
+.chat-widget-web-IS_CV_WEB_CONTAINER .oda-chat-title {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 1.125em;
+	font-weight: 700;
+}
+
+
+#IS_CV_WEB_WRAPPER {
+	position: relative;
+	height: calc(100% - 56px);
+	display: block;
+	/* overflow: scroll;   using iframe scrolling instead */
+}
+
+.ida-web-hide-header #IS_CV_WEB_WRAPPER {
+	height: 100%;
+}
+
+.ida-web-hide-header .oda-chat-webview-header {
+	display: none;
+}
+
+#IS_CV_WEB_FORM {
+	padding: 0 10px 10px 10px;
+	position: relative;
+	display: block;
+	height: 100%;
+}
+
+#IS_CV_WEB_FORM #lbFrameContent {
+	overscroll-behavior: contain;
+}
+
+.oda-chat-wrapper .oda-chat-webview-container.oda-chat-webview-container-open {
+	animation: oda-chat-webview-slide-in-bottom .4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+#IS_CV_WEB_CONTAINER.oda-chat-webview-container-open {
+	animation: oda-chat-webview-slide-in-bottom .4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+#IS_CV_WEB_CONTAINER.oda-chat-webview-container-close {
+	animation: oda-chat-webview-slide-out-bottom .4s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
+}
+
+
+
+/* Message styles --------------------------------- */
+
+body .oda-chat-wrapper .oda-chat-conversation {
+	padding: 10px;  /* default = 16px */
+}
+
+body .oda-chat-wrapper .oda-chat-messages-wrapper .oda-chat-message-list .oda-chat-message {
+	white-space: normal;
+}
+
+body .oda-chat-wrapper .oda-chat-message-block {
+	margin-top: 20px;
+}
+
+
+body .oda-chat-wrapper .oda-chat-icon-wrapper {
+	min-width: 20px;  /* match avatar width */
+}
+
+
+body .oda-chat-wrapper .oda-chat-message-bubble {
+	/* margin: 20px 0 !important; */
+	max-width: 100%;
+	padding: 15px;
+	overflow: visible;
+}
+
+body .oda-chat-wrapper .oda-chat-message-block.oda-chat-right {
+	/* margin: -10px; */
+}
+
+/* timestamp */
+body .oda-chat-wrapper .oda-chat-conversation .oda-chat-conversation-pane.oda-chat-bot-icon .oda-chat-relative-timestamp.oda-chat-left {
+	margin-inline-start: 44px; /* $$$ 56px if we have avater margin-end=8px */;
+}
+body .oda-chat-wrapper .oda-chat-conversation .oda-chat-conversation-pane.oda-chat-user-icon .oda-chat-relative-timestamp.oda-chat-right {
+	margin-inline-end: 44px;
+}
+
+/* Additional Styles ------------------------------------ */
+input, select {margin-top:5px;}
+
+.ida-no-padding {
+	padding: 0 !important;
+}
+
+.ida-scroll {
+	overscroll-behavior: contain;
+	overflow: scroll;    /* overflow-y instead? */
+}
+
+.ida-no-scroll {
+	overflow: hidden;
+}
+
+/* Card title verbiage */
+.oda-chat-wrapper .oda-chat-card .oda-chat-card-title {
+	font-weight: 500;
+}
+
+/* 22.01 - Vanilla Thumbs ----------------------- */ 
+
+#IS_THUMB_OLD.chat-widget-web-message-bubble {
+	max-width: none;
+}
+
+body .chat-widget-web-message-bubble.chat-widget-web-message-flyout.is-thumbs-class { 
+	margin: 0 0 0 25px; 
+	/* margin-left: 50px; */
+} 
+
+/* fix thumbs positioning issue */
+body .chat-widget-web-message-bubble.chat-widget-web-message-flyout.h-survey-class {
+	margin-top: 0;
+}
+
+/* Thumbs dark theme overrides */
+.oda-chat-redwood-dark #IS_THUMB_OLD img,
+.oda-chat-ida-dark #IS_THUMB_OLD img {
+	filter: invert(100%) sepia(0%) saturate(2%) hue-rotate(167deg) brightness(110%) contrast(101%);
+}
+
+.oda-chat-redwood-dark #is-thumb-question,
+.oda-chat-ida-dark #is-thumb-question {
+	color:#ffffff;
+}
+
+/* Welcome Flyout --------------------------------------- */
+
+/* welcome text styling */
+
+#isChatWelcomeBubble {
+  position: relative;
+  border-radius: 50px;
+  color: #FFFFFF;
+  background-color: #54565a;
+  width: 75px;
+  height: 75px;
+  font-family: "PT Sans", Arial, sans-serif;
+  overflow: hidden;
+
+  /* Flex centering */
+  display: flex;
+  align-items: center;
+  /* JDL 3/27/25 */
+    float:right;
+    bottom: 75px;
+
+}
+
+#isChatWelcomeText {
+  width: 160px;
+  margin: 10px 25px;
+
+  /* Multi-line ellipsis setup */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;  /* Adjust number of lines if needed */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+
+  /* A comfortable line height */
+  line-height: 1.2;
+  font-weight: 600;
+  text-overflow: ellipsis; 
+}
+
+	
+#isChatWelcomeBubble.welcomeBubbleShow {
+	width: 260px;  /* 220px */
+	cursor: pointer;
+	transition: width 1s ease-out 1s, opacity 0s 1s;
+	opacity: 1;
+}
+	
+#isChatWelcomeBubble.welcomeBubbleHide {
+	width: 75px;
+	opacity: 0;
+	transition: width 1s ease-out 1s, opacity 0s;
+	transition-delay: 0s, 1s;
+}
+
+body.ida-outage #isChatWelcomeBubble {
+	display: none !important;
+}
+/* end welcome text */
+
+/* Alerts --------------------------- */
+#isChatBadge {
+	min-width: calc(1em + 4px);
+	height: calc(1em + 4px);
+	display: block;
+	position: absolute;
+	top: -81px;
+	right: 52px;
+	background-color: #E74848;
+	color: #FFF;
+	border-radius: 100%;
+	text-align: center;
+	padding: 0px 0px;
+	line-height: calc(1em + 4px);
+	font-weight: 700;
+	font-size: 16pt;
+}
+
+
+/* JDL - Custom Styles for Ruby.  Backport? */
+
+/* JDL change for dropdowns */
+.oda-chat-wrapper * {
+	position: unset;
+}
+
+.oda-chat-header.oda-chat-flex {}
+
+.oda-chat-header.oda-chat-flex {
+    border-bottom: 2px solid #ff9e18;
+}
+
+.oda-chat-message-bubble p:last-child {
+	margin-bottom: 0px;
+}
+.oda-chat-message-bubble p:first-child {
+	margin-top: 0px;
+}
+
+/* JDL Add CV styles */
+.cvSummaryBlock:first-child{
+	border-radius:10px;
+	margin-top:5px;
+}
+
+.cvSummaryBlock:last-child{
+	border-radius:10px;
+	margin-bottom:5px;
+}
+
+.cvSummaryBlock{
+	display:block;
+	background-color:#ffffff;
+	margin-bottom: 15px;
+	border-bottom: 0px;
+	position:relative;
+	width:100%;
+	border-radius:10px;
+	padding:10px;
+}
+
+.cvSummaryItem:not(:last-child){
+	border:0px;
+}
+
+.cvSummaryItem{
+	padding:0px 0px;
+	margin-bottom:10px;
+	display:block;
+	clear:both;
+}
+
+.cvSummaryItemValue.inline, .cvSummaryItemName.inline {
+	display:block;
+	word-wrap: break-word;
+}
+
+.cvSummaryItem a {
+	word-break: break-word;
+}
+	
+
+.cvSummaryItemName{
+	color:#005a8b;
+	text-transform: uppercase;
+	font-size:12px;
+	line-height:16px;
+	width:210px;
+	position:relative;
+}
+
+.cvSummaryItemValue{
+	
+	font-size:12px;
+	line-height:16px;
+	width:210px;
+	position:relative;
+	padding:0px 10px;
+}
+
+
+.cvSummaryItem:last-child{
+	margin-bottom:0px;
+}
+
+.cvSummaryIntroText{
+	padding: 0px;
+	font-size: 16px;
+	color: #3E3E3E;
+	display: block;
+	width: 100%;
+	text-align: left;
+	font-weight: 400;
+}
+
+
+.cvSummaryBlock.cvSummaryBlockHeader {
+	padding-top: 0;    
+}
+
+div.cvSummaryBlock.cvSummaryBlockHeader .cvSummaryHeader {
+	background-color: #f7f7f7;
+	border-radius: 10px 10px 0 0;
+	border: 1px #e6e5eb solid;
+	display: block;    
+	margin-top: -10px;
+	width: calc(100% + 22px);
+	margin-left: -11px;
+	margin-bottom: 10px;
+	padding: 10px;
+	border-color: #e1e1e1;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.chat-widget-web-message-content .hrTransApprApprChain .cvSummaryBlock {
+	padding: 0;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+.chat-widget-web-message-content .hrTransApprApprChain .cvSummaryItem {
+	padding: 0 10px;
+}
+.chat-widget-web-message-content .hrTransApprApprChain .cvSummaryBlock:last-child {
+	padding-bottom: 10px;
+}
+/* End JDL customizations */
+
+/* Responsive medium form factor */
+@media (max-width: 767px) {
+	body .oda-chat-wrapper .oda-chat-button {
+		width: 50px;
+		height: 50px;
+	}
+
+	body .oda-chat-wrapper .oda-chat-button img {
+		width: 25px;
+		height: 25px;
+	}
+
+	/*
+	.isCV_PublicIcon {
+		width: 40px;
+		height: 40px;
+		background-size: 34px;
+	}
+	*/
+	
+	#isChatWelcomeBubble {
+		width: 50px;
+		height: 50px;
+		bottom: 49px;
+	}
+
+	#isChatWelcomeBubble.welcomeBubbleShow {
+		/* JDL fix 2/5/26 width: 180px; */
+		width:190px;
+	/*	margin-right: -30px; */
+		
+	}
+
+	#isChatWelcomeBubble.welcomeBubbleHide {
+		width: 50px;
+	}
+
+	.isCV_PublicChat #isChatIconWrapper #isChatWelcomeBubble #isChatWelcomeText {
+		font-size: 12px;
+		margin: 10px 15px;
+		width: 115px ;
+	}
+}
+	 
+/* Responsive small form factor */
+@media screen and (max-width: 430px) {
+	body {
+		position: relative;
+	}
+
+	.oda-chat-wrapper {
+		left: 0 !important;
+		margin-top: 11px;
+	}
+
+	.oda-chat-wrapper .oda-chat-widget {  
+		top: 0;
+		height: 100% !important;
+		min-height: 100%;
+		min-width: 100%;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
+
+	.oda-chat-wrapper.oda-chat-expanded .oda-chat-widget {  
+		position: fixed;
+	}
+	
+}
+
+/* responsive for small form factor landscape */
+@media screen and (max-height: 250px) {
+	body {
+		position: relative;
+	}
+
+	.oda-chat-wrapper {
+		left: 0 !important;
+		margin-top: 11px;
+	}
+
+	.oda-chat-wrapper .oda-chat-widget {  
+		top: 0;
+		height: 100% !important;
+		min-height: 100%;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
+
+	.oda-chat-wrapper.oda-chat-expanded .oda-chat-widget {  
+		position: fixed;
+	}
+	
+}
+
+/* Rule to better control images from Fetch URL Content answers */
+div[id^="readability-page"] img{
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+body button.ida-select-voice {
+	background-image: url('data:image/png;base64,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');
+	background-size: 20px;
+	background-repeat: no-repeat;
+	width: 20px;
+	min-width: 20px;
+	height: 20px;
+	min-height: 20px;
+	border: 0;
+	margin: 0;
+	padding: 0
+}
+
+/* Prevent body scroll if wide embedded Fluid or Lightboxed Fluid is opened */
+body.iLightboxOpen.is-co-fluid-comp {
+	overflow: hidden;
+}
+
+/* IS.Loader classes */
+/* --------------------------- Loader Overlays ---------------------------------- */
+
+.is-cv-embedded-loader {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: absolute; 
+}
+
+.is-cv-embedded-loader img {
+	width: 20%;
+	opacity: .85;
+	min-width: 4em;
+	max-width: 10em;
+}
+
+/* $$$ Add this to force container if no position is set.  Will keep styling overrides */
+.isProcessing, .isProcessingSec {
+	position: relative;
+	pointer-events: none;
+}
+
+.isProcessing .isLoader,
+html body .isProcessingSec .isLoader {
+	display: block;
+	position:absolute;
+}
+
+body.isProcessing .isLoader {
+	position: fixed;
+	z-index: 999999999 !important;
+}
+
+.isLoader {
+	display: none;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	/* .10 fo IE: 
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACRJREFUeNpiZGBgkGKgImBioDIYNXDUwFEDRw0cNXCoGAgQYAApEwBCpk5zMAAAAABJRU5ErkJggg==) repeat;
+	*/
+	/* .20 for IE:*/
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjIyMTQwOEUwMjM1NjExRTM5MUM1RkJGRDFCQjdGQTNCIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjlBQTk4MDIyMjM3NTExRTM5MUM1RkJGRDFCQjdGQTNCIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6MjIxNDA4REUyMzU2MTFFMzkxQzVGQkZEMUJCN0ZBM0IiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6MjIxNDA4REYyMzU2MTFFMzkxQzVGQkZEMUJCN0ZBM0IiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4f4IrwAAAAD0lEQVR42mJgYGAwBggwAAA4ADSSvYwwAAAAAElFTkSuQmCC) repeat;
+	background: rgba(0, 0, 0, 0.2);
+	z-index: 999999999;
+}
+
+
+/* Uncomment for special override for BB selected link for MSS Summary.  Woul dneed for all of them, though.
+.isProcessing.isLoaderBlur #isMSSContainer.mssShowSummary * h5, */
+
+/* ----- Grid, can be opened up to all items by uncommenting next item.  Also, be sure to add an IE CSS when using BLUR for IE --- */ 
+.isProcessing.isLoaderBlur *:not(.isLoaderMessage):not(.isLoader),
+.isProcessingSec.isLoaderBlur *:not(.isLoaderMessage):not(.isLoader),
+body .isProcessingSec.isLoaderBlur td,
+body .isProcessingSec.isLoaderBlur th h5, 
+body .isProcessingSec.isLoaderBlur a {
+	color: rgba(0, 0, 0, 0.000) !important;
+	text-shadow: 0 0 3px rgba(0, 0, 0, 1) !important;
+	/* Better performance that a blur filter (accessible via Frost below) especially when doing the entire page */
+}
+
+.isProcessing.isLoaderFrost *:not(.isLoaderMessage):not(.isLoader),
+.isProcessingSec.isLoaderFrost *:not(.isLoaderMessage):not(.isLoader) {
+	filter:url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="filter"><feGaussianBlur stdDeviation="2" /></filter></svg>#filter');
+	-webkit-filter:blur(2px);
+	-moz-filter: blur(2px); 
+	-o-filter: blur(2px); 
+	-ms-filter: blur(2px); 
+	filter:blur(2px);
+	/* IE Filter is on the IE page */
+}
+
+.isProcessing.isLoaderFrost .isLoader,
+.isProcessingSec.isLoaderFrost .isLoader,
+.isProcessing.isLoaderNoBG .isLoader,
+.isProcessingSec.isLoaderNoBG .isLoader {
+	background-image: none;
+	background-color: transparent;
+}
+
+
+
+.isLoader span {
+	position: absolute;
+	border-radius: 5px;
+	border: 2px solid rgba(44, 62, 80, 0.85);  /* 3px solid #2c3e50;  red=#a23339; */
+	top: 45%;
+	left: 50%;
+	margin: 0 0 0 -49px;
+	display: block;
+	width: 70px;
+	height: 1px;
+	color: #005a8b;   /* red=#a23339; */
+	font-size: 1em;
+	font-weight: 800;
+	padding: 60px 0 0;
+	text-align: center;
+	background-color:#FFFFFF;
+	background: url(IS_CORE_LOADER) no-repeat center 50% rgba(255,255,255,.85); 
+}
+
+
+.isLoader.hasMessage span {
+	/* $$$ min-width: 98px; */
+	width: auto;
+	height: auto;
+	background: url(IS_CORE_LOADER) no-repeat center 32% rgba(255,255,255,.85);
+	padding: 60px 10px 10px;
+}
+
+
+
+.isProcessing .isLoader.isLoaderNoWrapper span,
+.isProcessingSec .isLoader.isLoaderNoWrapper span {
+	border: none;
+	background-color: transparent;
+}
+
+/* ---------- */
+.isProcessing .isLoader2 span:after, .isProcessing .isLoader2 span:before,
+.isProcessingSec .isLoader2 span:after, .isProcessingSec .isLoader2 span:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+/*  bottom: 0; $$$ */
+  top: 18px;
+  margin: auto;
+  width: 30px;
+  height: 30px;
+  border: 5px solid transparent;
+  border-bottom: 5px solid #005A8B;  
+  border-radius: 100%;
+  -webkit-animation: rotate 1s linear infinite;
+  animation: rotate 1s linear infinite;
+}
+.isProcessing .isLoader2 span:before,
+.isProcessingSec .isLoader2 span:before {
+  width: 42px;  
+  height: 42px;  
+  -webkit-animation-direction: reverse;
+  animation-direction: reverse;
+  top:12px;
+}
+
+.isProcessing .isLoader2 span,
+.isProcessingSec .isLoader2 span {
+  background-image: none;
+  border: 2px solid rgba(44, 62, 80, 0.85);
+  padding: 0; /* $$$ */
+  height: 70px;
+}
+
+/*
+.isProcessing .isLoader2.hasMessage span:after, .isProcessing .isLoader2.hasMessage span:before,
+.isProcessingSec .isLoader2.hasMessage span:after, .isProcessingSec .isLoader2.hasMessage span:before {
+/ *   top: -25%; $$$ * /
+}
+*/
+
+.isProcessing .isLoader2.hasMessage span,
+.isProcessingSec .isLoader2.hasMessage span {
+  width: auto;
+  height: auto;
+  padding: 60px 12px 12px 12px;
+}
+
+.isProcessing:not(.isLoaderFrost) .isLoader2.isLoaderNoWrapper span:after, .isProcessing:not(.isLoaderFrost) .isLoader2.isLoaderNoWrapper span:before,
+.isProcessingSec:not(.isLoaderFrost) .isLoader2.isLoaderNoWrapper span:after, .isProcessingSec:not(.isLoaderFrost) .isLoader2.isLoaderNoWrapper span:before {
+	border-bottom-color: #FFFFFF;
+}
+
+.isProcessing:not(.isLoaderFrost) .isLoader.isLoaderNoWrapper span,
+.isProcessingSec:not(.isLoaderFrost) .isLoader.isLoaderNoWrapper span {
+	color: #FFFFFF;
+}
+
+@-webkit-keyframes rotate {
+  from {
+	-webkit-transform: rotate(0deg);
+	transform: rotate(0deg);
+  }
+  to {
+	-webkit-transform: rotate(360deg);
+	transform: rotate(360deg);
+  }
+}
+@keyframes rotate {
+  from {
+	-webkit-transform: rotate(0deg);
+	transform: rotate(0deg);
+  }
+  to {
+	-webkit-transform: rotate(360deg);
+	transform: rotate(360deg);
+  }
+}
+
+/* Modal positioning */
+.is-co-fluid-comp .PSMODAL {
+	position: absolute;
+	top: 0;
+	z-index: 5000;
+}
+
+/* JDL 10/8/24 - fix for autocomplete styiing in 24.08 */
+.oda-chat-wrapper .oda-chat-autocomplete-items .oda-chat-autocomplete-item {
+  min-height: 32px;
+  padding: 8px 0px;
+  cursor: pointer;
+}
+
+#oda-chat-suggestions-list {
+  list-style-type: none;
+}
+.oda-chat-wrapper .oda-chat-autocomplete-items {
+  margin-left: -30px;
+}
+
+.oda-chat-wrapper .oda-chat-widget.oda-chat-medium-size .oda-chat-footer {
+ margin: 0px;
+}
+.oda-chat-wrapper .oda-chat-footer .oda-chat-footer-mode-keyboard {
+	border:none;
+}
+.oda-chat-wrapper .oda-chat-footer.oda-chat-mode-keyboard .oda-chat-footer-mode-keyboard {
+    border:none;
+}
+
+/* JDL 11/24/24 new Thumbs Feedback styles */
+/* LLM Thumbs - 2024Q3 */
+
+.oda-chat-wrapper .llm-feedback-container, .oda-chat-wrapper .feedback-container {
+  position: relative;
+  /* display: inline-block; */
+
+  background-color: white;
+  border-radius: 10px;
+  padding-left: 10px;
+  margin-top: 10px;
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 10px;
+  font-size: 14px;
+}
+
+/* LLM Thumbs - 2024Q3 */
+.oda-chat-wrapper .llm-feedback-container>span, .oda-chat-wrapper .feedback-container>span  {
+  line-height:18px;
+ /* vertical-align: middle; */
+}
+
+
+.oda-chat-wrapper .llm-feedback-container button, .oda-chat-wrapper .feedback-container button  {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.oda-chat-wrapper .llm-feedback-container img, .oda-chat-wrapper .feedback-container img {
+  width: 18px;
+  height: 18px;
+  content: inherit;
+}
+
+/* Positioning the thumbs-down button */
+.oda-chat-wrapper .llm-thumbs-down {
+  position: relative;
+}
+
+/* Flyout menu positioning */
+.oda-chat-wrapper .feedback-flyout {
+  position: absolute;
+  top: 100%; /* Positions flyout directly below the button */
+  left: 0;   /* Aligns left edge with the button */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 5px;
+  z-index: 1000;
+  width: 120px;
+  scroll-margin-bottom: 20px;
+}
+
+.oda-chat-wrapper .feedback-flyout .feedback-flyout-option {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.oda-chat-wrapper .feedback-flyout .feedback-flyout-option:hover {
+  background-color: #f0f0f0;
+}
+
+.oda-chat-wrapper .llm-feedback-container, .oda-chat-wrapper .feedback-container {
+  margin-top: 5px;
+  padding-bottom: 8px;
+  padding-top: 8px;
+}
+.oda-chat-wrapper .llm-feedback-container button, .oda-chat-wrapper .feedback-container button {
+  vertical-align: text-bottom;
+}
+.oda-chat-wrapper .oda-chat-widget.oda-chat-medium-size .oda-chat-message-bubble ul {
+  margin-bottom: 5px;
+}
+.oda-chat-wrapper.oda-chat-expanded button {
+        min-height:revert;        
+}
+
+
+/* JDL end new Thumbs feedback styles */
+
+
+/* JDL 9/8/25 make all header buttons the same color according to the theme */
+.oda-chat-wrapper .oda-chat-header-actions .oda-chat-header-button svg {
+  filter: var(--filter-header-logo);
+}
+
+@media screen and (max-width: 340px) {
+  body #isChatWelcomeBubble[style*="left"] {
+    margin-right: 315px;
+  }
+}
+
+/* Fix for welcome bubble on very small screens */
+ @media screen and (max-width: 449px) {
+  body #isChatWelcomeBubble {
+	margin-top: -26px;
+  }
+  body #isChatWelcomeBubble[style*="left"] {
+    margin-right: 1vw;
+	margin-top: -43px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  body #isChatWelcomeBubble.welcomeBubbleShow {
+    width: 180px;
+  }
+}
+@media screen and (min-width: 450px) and (max-width: 767px) {
+  body #isChatWelcomeBubble[style*="left"] {
+	margin-right: 25px;
+  }
+}
+@media screen and (min-width: 317px) and (max-width: 427px) {
+  body #isChatWelcomeBubble[style*="left"] {
+	margin-right: 97vw;
+  }
+}
+
+#oda-tool-checkpoint {
+  display: flex;
+  align-items: center;
+  height: 1.6em;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* both lines grow equally from a zero basis → symmetric */
+#oda-tool-checkpoint::before,
+#oda-tool-checkpoint::after {
+  content: "";
+  background-color: var(--color-horizontal-rule-background);
+  height: 1px;
+  flex: 1 1 0;
+  position: relative;
+  z-index: 0;
+}
+#oda-tool-checkpoint::before { margin-inline-end: 10px; }
+#oda-tool-checkpoint::after  { margin-inline-start: 10px; }
+
+#oda-tool-checkpoint .status-text {
+  /* --- reset the old absolute-positioning rule (the real culprit) --- */
+  position: static;
+  left: auto;
+  right: auto;
+  transform: none;
+  margin: 0;
+  line-height: 1.4; 
+  /* --- flex: size to content, shrinkable, capped, never grows --- */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 80%;
+
+  /* --- truncation --- */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+
+  /* --- label sits cleanly over the rules --- */
+  background-color: var(--color-conversation-background, #F9FAFB);
+  padding: 0 8px;
+  z-index: 1;
+}
+
+#oda-tool-checkpoint .status-text.leaving {
+  animation: slideOutToTop 0.3s ease forwards;
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+@keyframes slideOutToTop {
+  from { transform: translateX(-50%) translateY(0);    opacity: 1; }
+  to   { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+}

@@ -1,0 +1,34 @@
+/* ------------------------------------------------------------------------ 
+   CLIENT_CV_OB_REMOTE_STYLES.css
+
+   Put any client themes and custom styles in this file. 
+   Be sure to:
+        1) Uncomment CLIENT_CV_OB_REMOTE_STYLES in the IS_CV_PUBLIC_HOOK.js
+        2) If a custom theme is added, update the theme property in IS_CV_OB_SETTINGS_SDK.js, 
+
+   ------------------------------------------------------------------------ */
+
+body .oda-chat-button, body #isCV_PublicChat{
+position: absolute;
+}
+/* body #idalogin {
+   display: none;
+} */
+
+body .oda-chat-wrapper .oda-chat-button-drag-handle {
+  display: none !important;
+}
+
+/* JDL 11/19/25 - fix for dragging on transaction pages */
+body.ida-is-dragging * {
+    pointer-events: none !important;
+}
+
+body.ida-is-dragging #idalogin {
+    pointer-events: auto !important; /* Keep pointer events on the dragged element */
+}
+
+/*JDL 4/20/26 - fix for dragging sluggishness */
+body .oda-chat-button  {
+  transition: none !important;
+}

@@ -1,0 +1,78 @@
+{
+  "baseUrl": "https://chatui.ida.gideontaylor.com/vccsoda/",
+  "fetchedAt": "2026-07-31T15:30:01.937Z",
+  "files": [
+    {
+      "path": "IS_CV_PUBLIC_HOOK.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/IS_CV_PUBLIC_HOOK.js",
+      "bytes": 69467,
+      "sha256": "dbb4a4f7248b55c0c6d0b6dadfed4ce307570422ba1dd24e09aa1d9aa0f8cebd"
+    },
+    {
+      "path": "IS_CV_ENV_CONFIG.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/IS_CV_ENV_CONFIG.js",
+      "bytes": 138282,
+      "sha256": "741625d7c5b1102f1de605d424ec3d9d5e56b822de2190b2c5f558f0533f9037"
+    },
+    {
+      "path": "scripts/IS_CORE_CONFIG_JS.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/IS_CORE_CONFIG_JS.js",
+      "bytes": 26407,
+      "sha256": "1142593f477614a7e77867cc995d7695e0769d59251f15dd3afc9153b6c43108"
+    },
+    {
+      "path": "scripts/is_core_lite.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/is_core_lite.js",
+      "bytes": 27172,
+      "sha256": "67589d78df55ed871bce9fb422a71a9ed67f1eca1a0269cdb3bade56330f4187"
+    },
+    {
+      "path": "scripts/IS_CV_OB_SETTINGS_SDK.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/IS_CV_OB_SETTINGS_SDK.js",
+      "bytes": 17947,
+      "sha256": "3b556a608de26442fb969513bc7f9835b115cc331f1dcd1f0ea7f71f7aa4ddc5"
+    },
+    {
+      "path": "scripts/IS_CV_OB_WIDGET_SDK.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/IS_CV_OB_WIDGET_SDK.js",
+      "bytes": 59415,
+      "sha256": "77fb8e995d41b3161fc925715778370409679a0a694d8aaa1a8b0ec230771317"
+    },
+    {
+      "path": "scripts/web-sdk.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/web-sdk.js",
+      "bytes": 430637,
+      "sha256": "f47401f4afc907d1473e41b614ad5b18573275c13516467838b59246184f4033"
+    },
+    {
+      "path": "scripts/IS_CV_OUTAGE_SETTING.js",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/scripts/IS_CV_OUTAGE_SETTING.js",
+      "bytes": 259,
+      "sha256": "2dd24c38bed026b83cc259e0d85659ecf319d7725f094e42afc1d3ac72bb3784"
+    },
+    {
+      "path": "styles/IS_CV_THEME_BASE.css",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/styles/IS_CV_THEME_BASE.css",
+      "bytes": 23516,
+      "sha256": "f4d9f5a412f508de59f5a343e6b86e4438a4af7aa24b0aa3a4c06af282afbe14"
+    },
+    {
+      "path": "styles/IS_CV_OB_STYLES_SDK.css",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/styles/IS_CV_OB_STYLES_SDK.css",
+      "bytes": 36834,
+      "sha256": "ea3bf5fd4de54c24651693004cda2c2106c2dcd10dd223ef58477b80b4586e53"
+    },
+    {
+      "path": "styles/CLIENT_CV_OB_REMOTE_STYLES.css",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/styles/CLIENT_CV_OB_REMOTE_STYLES.css",
+      "bytes": 1191,
+      "sha256": "7b51566e64b93ca35f4ea9c852aaa7add8a204c365fddb1604f7f26298eaf98e"
+    },
+    {
+      "path": "styles/IS_IDA_DRAGGABLE.css",
+      "url": "https://chatui.ida.gideontaylor.com/vccsoda/styles/IS_IDA_DRAGGABLE.css",
+      "bytes": 986,
+      "sha256": "2a530297715802a5ce70e1902bdd20355132f61337c8066ee71b921a28434a01"
+    }
+  ]
+}
