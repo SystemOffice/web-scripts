@@ -1124,7 +1124,7 @@
         displayName: config.displayName || "Student Support Bot",
         order: config.order,
         scriptId: config.scriptId || "IS_CV_PUBLIC_HOOK",
-        src: config.src || "https://vccs-ws.iuc.intrasee.com/vccsoda/IS_CV_PUBLIC_HOOK.js",
+        src: config.src || "https://chatui.ida.gideontaylor.com/vccsoda/IS_CV_PUBLIC_HOOK.js",
         attributes: {
           "data-org": config.org || "DEMO_ORG",
           "type": "text/javascript"
