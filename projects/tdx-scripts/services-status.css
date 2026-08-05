@@ -59,6 +59,58 @@
   line-height: 1.7;
 }
 
+#tdx-services-status .sts-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+#tdx-services-status .sts-header-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: baseline;
+  width: 100%;
+}
+
+#tdx-services-status .sts-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+#tdx-services-status .sts-refresh-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#tdx-services-status .sts-refresh-btn:hover,
+#tdx-services-status .sts-refresh-btn:focus-visible {
+  background: var(--color-primary-dark);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 83, 155, 0.15);
+}
+
+#tdx-services-status .sts-meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-on-surface-muted);
+  text-align: right;
+}
+
 #tdx-services-status h2 {
   font-family: var(--font-slab);
   font-size: 22px;
