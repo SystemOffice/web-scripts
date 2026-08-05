@@ -22,6 +22,7 @@ const DISRUPTIVE_OUTAGE_TYPES = new Set(['Service Degradation', 'Unscheduled Out
 
 /** Number of days shown in a service's uptime history bar. */
 const UPTIME_BAR_DAYS = 90;
+const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
  * fetchReportRows(url)
@@ -829,11 +830,24 @@ function renderStatusPage(services, notices, options = {}) {
     const header = document.createElement('div');
     header.className = 'sts-header';
     header.innerHTML = `
-        <h1>IT Services Status</h1>
-        <p class="sts-updated">Updated ${escapeHtml(new Date().toLocaleString())}</p>
+        <div class="sts-header-top">
+          <div>
+            <h1>IT Services Status</h1>
+            <p class="sts-updated">Updated ${escapeHtml(new Date().toLocaleString())}</p>
+          </div>
+          <div class="sts-header-actions">
+            <button class="sts-refresh-btn" type="button">Refresh now</button>
+            <p class="sts-meta">Auto-refreshes every 10 minutes</p>
+          </div>
+        </div>
         ${options.preview ? '<p class="sts-preview-banner">Preview mode &mdash; showing sample data. Live TDX data only loads when this page is hosted on a teamdynamix.com domain (the report API\'s CORS policy blocks other origins).</p>' : ''}
     `;
     container.appendChild(header);
+
+    const refreshButton = header.querySelector('.sts-refresh-btn');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshStatus);
+    }
 
     const noticesSection = document.createElement('section');
     noticesSection.className = 'sts-notices';
@@ -939,7 +953,13 @@ const SAMPLE_NOTICES = [
  * a teamdynamix.com origin, falls back to sample data with a preview
  * banner instead of surfacing the expected CORS failure as an error.
  */
-async function initServicesStatus() {
+async function refreshStatus() {
+    const container = getStatusContainer();
+    const metaEl = container.querySelector('.sts-meta');
+    if (metaEl) {
+        metaEl.textContent = `Refreshing... (last full refresh ${new Date().toLocaleTimeString()})`;
+    }
+
     try {
         const [services, notices] = await Promise.all([
             fetchReportRows(SERVICES_REPORT_URL),
@@ -955,6 +975,11 @@ async function initServicesStatus() {
         console.error(err);
         renderError('Unable to load service status information right now. Please try again later.');
     }
+}
+
+function initServicesStatus() {
+    refreshStatus();
+    setInterval(refreshStatus, REFRESH_INTERVAL_MS);
 }
 
 addCss();
