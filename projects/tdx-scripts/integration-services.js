@@ -17,7 +17,7 @@ window.INTEGRATION_STATUS_SERVICES = [
     type: 'mcgrawhill',
     dataPath: '/data/incident_overviews.json',
   },
-  { name: 'Pressbooks', base: 'https://status.pressbooks.com', type: 'link' },
+  { name: 'Pressbooks', base: 'https://status.pressbooks.com', type: 'betterstack' },
   { name: 'OpenStax', base: 'https://status.openstax.org', type: 'statuspage' },
   { name: 'Instructure (Canvas)', base: 'https://status.instructure.com', type: 'statuspage' },
   { name: 'Lucid', base: 'https://status.lucid.co', type: 'statuspage' },
