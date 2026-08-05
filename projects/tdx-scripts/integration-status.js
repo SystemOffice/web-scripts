@@ -18,11 +18,13 @@ const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 * type meanings:
 *  - 'statuspage'  : Atlassian Statuspage.io - GET {base}/api/v2/status.json
 *  - 'instatus'    : Instatus - GET {base}/summary.json
-*  - 'google'      : Google Workspace status - GET {base}incidents.json
+*  - 'google'      : Google Workspace status - GET {base}/incidents.json
 *  - 'uptimerobot' : UptimeRobot-hosted page - GET {base}/api/getMonitorList/{pageId}
 *                    (best-effort: response shape not fully confirmed, verify live)
 *  - 'mcgrawhill'  : McGraw Hill's own /data/*.json feed
 *                    (best-effort: response shape not fully confirmed, verify live)
+*  - 'betterstack' : BetterStack status page - GET {base}/index.json
+*                    (Pressbooks uses BetterStack)
 *  - 'link'        : No usable public API found; show a "check manually" tile
 *  - 'none'        : No status page identified at all; static/no-link tile
 */
@@ -123,12 +125,33 @@ return down
 : { state: 'operational', label: 'Monitors reporting up (best-effort)' };
 }
 
+async function checkBetterStack(service) {
+const base = service.base.replace(/\/+$/, '');
+const res = await fetch(`${base}/index.json`);
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const data = await res.json();
+const state = data && data.data && data.data.attributes && data.data.attributes.aggregate_state;
+const statusMap = {
+operational: 'operational',
+degraded: 'issue',
+maintenance: 'issue',
+partial_outage: 'issue',
+major_outage: 'outage',
+downtime: 'outage',
+};
+const label = (data && data.data && data.data.attributes && data.data.attributes.announcement)
+  || formatLabel(state)
+  || 'Status unavailable';
+return { state: statusMap[state] || 'unknown', label };
+}
+
 const CHECKERS = {
 statuspage: checkStatuspage,
 instatus: checkInstatus,
 google: checkGoogleWorkspace,
 mcgrawhill: checkMcGrawHill,
 uptimerobot: checkUptimeRobotPage,
+betterstack: checkBetterStack,
 };
 
 /**
