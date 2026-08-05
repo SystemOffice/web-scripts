@@ -26,42 +26,16 @@ const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 *  - 'link'        : No usable public API found; show a "check manually" tile
 *  - 'none'        : No status page identified at all; static/no-link tile
 */
-const SERVICES = [
-{ name: 'TurnItIn', base: 'https://turnitin.statuspage.io', type: 'statuspage' },
-{ name: 'Respondus', base: 'https://status.respondus.com', type: 'statuspage' },
-{ name: 'Zoom', base: 'https://www.zoomstatus.com', type: 'statuspage' },
-{ name: 'Honorlock', base: 'https://status.honorlock.com', type: 'statuspage' },
-{
-name: 'Qwickly', base: 'https://stats.uptimerobot.com', type: 'uptimerobot',
-pageId: 'A72WoHZ7gP',
-},
-{ name: 'Pearson', base: 'https://status.pearson.com', type: 'link' },
-{ name: 'Cengage', base: 'https://techcheck.cengage.com', type: 'link' },
-{
-name: 'McGraw Hill', base: 'https://status.mcgrawhill.com', type: 'mcgrawhill',
-dataPath: '/data/incident_overviews.json',
-},
-{ name: 'Pressbooks', base: 'https://status.pressbooks.com', type: 'link' },
-{ name: 'OpenStax', base: 'https://status.openstax.org', type: 'statuspage' },
-{ name: 'Instructure (Canvas)', base: 'https://status.instructure.com', type: 'statuspage' },
-{ name: 'Lucid', base: 'https://status.lucid.co', type: 'statuspage' },
-{ name: 'ZyBooks', base: 'https://status.zybooks.com', type: 'statuspage' },
-{ name: 'CompTIA', base: 'https://status.comptia.net', type: 'link' },
-{ name: 'Hypothesis', base: 'https://web.hypothes.is/status/', type: 'link' },
-{ name: 'Packback', base: 'https://status.packback.co', type: 'link' },
-{ name: 'Harmonize', base: 'https://harmonizelearning.instatus.com', type: 'instatus' },
-{ name: 'Google Assignments', base: 'https://www.google.com/appsstatus/dashboard/', type: 'google' },
-{
-name: 'CidiLabs', base: 'https://status.cidilabs.com', type: 'uptimerobot',
-pageId: 'qZQijKKCt2',
-},
-{ name: 'B&N All Access (First Day Complete)', base: '', type: 'none' },
-{ name: 'TopHat', base: '', type: 'none' },
-{ name: 'EVOLVE', base: '', type: 'none' },
-{ name: 'JB Learning', base: '', type: 'none' },
-{ name: 'LaunchPad', base: '', type: 'none' },
-{ name: 'Infobase Learning', base: '', type: 'none' },
-];
+function getIntegrationServices() {
+  const services = window.INTEGRATION_STATUS_SERVICES;
+  if (!Array.isArray(services)) {
+    console.warn('integration-status.js requires integration-services.js to be loaded before integration-status.js.');
+    return [];
+  }
+  return services.slice();
+}
+
+const SERVICES = getIntegrationServices();
 
 /** Formats an indicator/status string into Title Case words. */
 function formatLabel(value) {
@@ -177,90 +151,165 @@ return { state: 'unknown', label: 'Unable to verify - view status page' };
 }
 
 const STATE_ICON = {
-operational: 'fa-solid fa-circle-check',
-issue: 'fa-solid fa-triangle-exclamation',
-outage: 'fa-solid fa-circle-xmark',
-unknown: 'fa-solid fa-circle-question',
-none: 'fa-solid fa-minus',
+  operational: 'fa-solid fa-circle-check',
+  issue: 'fa-solid fa-triangle-exclamation',
+  outage: 'fa-solid fa-circle-xmark',
+  unknown: 'fa-solid fa-circle-question',
+  none: 'fa-solid fa-minus',
+};
+
+const STATE_ORDER = {
+  outage: 0,
+  issue: 1,
+  operational: 2,
+  unknown: 3,
+  none: 4,
 };
 
 /** getServiceUrl(service): the public status page URL for a service's "View status page" link. */
 function getServiceUrl(service) {
-if (service.type === 'uptimerobot' && service.base === 'https://stats.uptimerobot.com') {
-return `${service.base}/${service.pageId}`;
-}
-return service.base;
-}
-
-/** buildCard(service): the DOM node for one service tile (initial "checking" state). */
-function buildCard(service) {
-const card = document.createElement('div');
-card.className = 'is-card is-unknown';
-card.dataset.service = service.name;
-
-const top = document.createElement('div');
-top.className = 'is-card-top';
-top.innerHTML = `<i class="is-icon ${STATE_ICON.unknown}"></i><span class="is-name">${service.name}</span>`;
-card.appendChild(top);
-
-const label = document.createElement('div');
-label.className = 'is-label';
-label.textContent = 'Checking...';
-card.appendChild(label);
-
-const updated = document.createElement('div');
-updated.className = 'is-updated';
-card.appendChild(updated);
-
-if (service.base) {
-const link = document.createElement('a');
-link.className = 'is-link';
-link.href = getServiceUrl(service);
-link.target = '_blank';
-link.rel = 'noopener';
-link.textContent = 'View status page \u2197';
-card.appendChild(link);
+  if (service.type === 'uptimerobot' && service.base === 'https://stats.uptimerobot.com') {
+    return `${service.base}/${service.pageId}`;
+  }
+  return service.base;
 }
 
-if (service.note) {
-const note = document.createElement('div');
-note.className = 'is-note';
-note.textContent = service.note;
-card.appendChild(note);
+function isAutoUpdated(service) {
+  return Boolean(CHECKERS[service.type]);
 }
 
-return card;
+function groupServices(services) {
+  const auto = [];
+  const manual = [];
+  services.forEach((service) => {
+    if (isAutoUpdated(service)) {
+      auto.push(service);
+    } else {
+      manual.push(service);
+    }
+  });
+  auto.sort((a, b) => a.name.localeCompare(b.name));
+  manual.sort((a, b) => a.name.localeCompare(b.name));
+  return { auto, manual };
 }
 
-/** updateCard(card, result): applies a checked state to an existing card. */
-function updateCard(card, result) {
-card.className = `is-card is-${result.state}`;
-const icon = card.querySelector('.is-icon');
-icon.className = `is-icon ${STATE_ICON[result.state] || STATE_ICON.unknown}`;
-card.querySelector('.is-label').textContent = result.label;
-card.querySelector('.is-updated').textContent = `Last checked ${new Date().toLocaleTimeString()}`;
+function buildRow(service) {
+  const tr = document.createElement('tr');
+  tr.className = 'is-service-row is-unknown';
+  tr.dataset.serviceName = service.name.toLowerCase();
+
+  const nameCell = document.createElement('td');
+  nameCell.className = 'is-name-cell';
+  nameCell.textContent = service.name;
+  tr.appendChild(nameCell);
+
+  const statusCell = document.createElement('td');
+  statusCell.className = 'is-status-cell';
+  statusCell.innerHTML = `<i class="is-icon ${STATE_ICON.unknown}"></i><span class="is-label">Checking...</span>`;
+  tr.appendChild(statusCell);
+
+  const updatedCell = document.createElement('td');
+  updatedCell.className = 'is-updated-cell';
+  tr.appendChild(updatedCell);
+
+  const linkCell = document.createElement('td');
+  linkCell.className = 'is-link-cell';
+  if (service.base) {
+    const link = document.createElement('a');
+    link.href = getServiceUrl(service);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'View status page \u2197';
+    linkCell.appendChild(link);
+  } else {
+    linkCell.textContent = '\u2014';
+  }
+  tr.appendChild(linkCell);
+
+  return tr;
 }
 
-let cardsByService = new Map();
+function updateRow(row, result) {
+  row.className = `is-service-row is-${result.state}`;
+  row.dataset.state = result.state;
+  const icon = row.querySelector('.is-icon');
+  icon.className = `is-icon ${STATE_ICON[result.state] || STATE_ICON.unknown}`;
+  row.querySelector('.is-label').textContent = result.label;
+  row.querySelector('.is-updated-cell').textContent = `Last checked ${new Date().toLocaleTimeString()}`;
+}
 
-/** refreshAll(): re-checks every service in parallel and updates its tile. */
-async function refreshAll() {
-const metaEl = document.querySelector('#integration-status .is-meta');
-if (metaEl) metaEl.textContent = `Refreshing... (last full refresh ${new Date().toLocaleTimeString()})`;
+let rowsByService = new Map();
+let tableBodies = [];
 
-await Promise.all(SERVICES.map(async (service) => {
-const result = await checkService(service);
-const card = cardsByService.get(service.name);
-if (card) updateCard(card, result);
-}));
+function sortTableBody(tbody) {
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    const aState = a.dataset.state || 'unknown';
+    const bState = b.dataset.state || 'unknown';
+    const byState = STATE_ORDER[aState] - STATE_ORDER[bState];
+    if (byState !== 0) return byState;
+    const aName = a.dataset.serviceName || '';
+    const bName = b.dataset.serviceName || '';
+    return aName.localeCompare(bName);
+  });
+  rows.forEach((row) => tbody.appendChild(row));
+}
 
-if (metaEl) metaEl.textContent = `Last refreshed ${new Date().toLocaleTimeString()} \u00b7 auto-refreshes every 5 min`;
+function buildTableSection(title, services) {
+  const section = document.createElement('section');
+  section.className = 'is-table-section';
+
+  const heading = document.createElement('h2');
+  heading.textContent = title;
+  section.appendChild(heading);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'is-table-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'is-table';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  headRow.innerHTML = '<th class="is-name-cell">Service</th>'
+    + '<th>Status</th>'
+    + '<th>Last checked</th>'
+    + '<th>Status page</th>';
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  services.forEach((service) => {
+    const row = buildRow(service);
+    tbody.appendChild(row);
+    rowsByService.set(service.name, row);
+  });
+  table.appendChild(tbody);
+  tableBodies.push(tbody);
+
+  wrap.appendChild(table);
+  section.appendChild(wrap);
+  return section;
+}
+
+function refreshAll() {
+  const metaEl = document.querySelector('#integration-status .is-meta');
+  if (metaEl) metaEl.textContent = `Refreshing... (last full refresh ${new Date().toLocaleTimeString()})`;
+
+  Promise.all(SERVICES.map(async (service) => {
+    const result = await checkService(service);
+    const row = rowsByService.get(service.name);
+    if (row) updateRow(row, result);
+  })).then(() => {
+    tableBodies.forEach(sortTableBody);
+    if (metaEl) metaEl.textContent = `Last refreshed ${new Date().toLocaleTimeString()} \u00b7 auto-refreshes every 5 min`;
+  });
 }
 
 /** initIntegrationStatus(): builds the page shell and starts polling. */
 function initIntegrationStatus() {
-const root = document.getElementById('integration-status');
-root.innerHTML = `
+  const root = document.getElementById('integration-status');
+  root.innerHTML = `
 <div class="is-header">
 <h1>Canvas 3rd-Party Integration Status</h1>
 <div>
@@ -268,21 +317,20 @@ root.innerHTML = `
 <div class="is-meta">Loading...</div>
 </div>
 </div>
-<div class="is-grid"></div>
+<div class="is-table-sections"></div>
 `;
 
-const grid = root.querySelector('.is-grid');
-cardsByService = new Map();
-SERVICES.forEach((service) => {
-const card = buildCard(service);
-grid.appendChild(card);
-cardsByService.set(service.name, card);
-});
+  const sections = root.querySelector('.is-table-sections');
+  rowsByService = new Map();
 
-root.querySelector('.is-refresh-btn').addEventListener('click', refreshAll);
+  const { auto, manual } = groupServices(SERVICES);
+  if (auto.length) sections.appendChild(buildTableSection('Automatically updated services', auto));
+  if (manual.length) sections.appendChild(buildTableSection('Manual check required', manual));
 
-refreshAll();
-setInterval(refreshAll, REFRESH_INTERVAL_MS);
+  root.querySelector('.is-refresh-btn').addEventListener('click', refreshAll);
+
+  refreshAll();
+  setInterval(refreshAll, REFRESH_INTERVAL_MS);
 }
 
 initIntegrationStatus();
