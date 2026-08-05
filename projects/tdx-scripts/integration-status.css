@@ -139,3 +139,75 @@
 #integration-status .is-none .is-label { color: var(--color-on-surface-muted); }
 #integration-status .is-unknown .is-card,
 #integration-status .is-none .is-card { background: var(--color-surface-muted-tint); }
+
+#integration-status .is-table-section {
+  margin-top: 32px;
+}
+
+#integration-status .is-table-section h2 {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
+  color: var(--color-primary-dark);
+}
+
+#integration-status .is-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+#integration-status .is-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+#integration-status .is-table th,
+#integration-status .is-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-top: 1px solid var(--color-border);
+}
+
+#integration-status .is-table thead th {
+  border-top: none;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-primary-tint);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+#integration-status .is-table tbody tr:first-child td {
+  border-top: none;
+}
+
+#integration-status .is-name-cell {
+  width: 35%;
+  font-weight: 600;
+}
+
+#integration-status .is-status-cell {
+  min-width: 220px;
+}
+
+#integration-status .is-updated-cell,
+#integration-status .is-link-cell {
+  width: 20%;
+}
+
+#integration-status .is-table .is-service-row:hover {
+  background: var(--color-surface-primary-tint);
+}
+
+#integration-status .is-link-cell a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+#integration-status .is-link-cell a:hover {
+  text-decoration: underline;
+}
