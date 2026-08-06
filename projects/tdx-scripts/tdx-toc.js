@@ -52,14 +52,6 @@
         return document;
     }
 
-    function scrollToHeading(heading, adjustment) {
-        if (!heading) {
-            return;
-        }
-        heading.style.scrollMarginTop = (adjustment || 0) + 'px';
-        // var top = heading.getBoundingClientRect().top + window.scrollY - (adjustment || 0) - 10;
-        // window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
-    }
 
     function findActiveIndex(headings, adjustment) {
         var scrollPosition = window.scrollY + (adjustment || 0) + 20;
@@ -168,14 +160,19 @@
             settings.adjustment += instance.container.offsetHeight;
         }
 
+        const relativeTop = instance.container.getBoundingClientRect().top;
+        instance.container.style.top = relativeTop + "px";
+
         // Create the style element
         const styleTag = document.createElement("style");
 
+        const scrollMarginTopValue = settings.adjustment + relativeTop;
+        
         // Add your CSS rules using a template literal
         // adjust for the height of the TOC so that the headings are not hidden behind it when scrolled to
         styleTag.textContent = `
                 ${settings.targetselector} {
-                    scroll-margin-top: ${settings.adjustment}px;
+                    scroll-margin-top: ${scrollMarginTopValue}px;
                 }
         `;
 
