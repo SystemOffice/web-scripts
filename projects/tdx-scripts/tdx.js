@@ -66,7 +66,7 @@ function dynamicallyLoadScript(url) {
 }
 
 loadScriptAsync(baseURL + 'tdx-toc.min.js')
-    .then(() => console.log('tdx-toc.js script loaded successfully'))
+    .then(() => console.log('tdx-toc.min.js script loaded successfully'))
     .catch(error => console.error(error));
 
 /**

@@ -80,7 +80,7 @@ form[action^="/TDClient/3292/SSC/"] {
             padding-top: 110px !important;
         }
 
-	#sscTOC {
+	#vccsTOC {
 		position: fixed !important;
 		-ms-overflow-style: none;  /* IE and Edge */
 		scrollbar-width: none;  /* Firefox */
@@ -88,11 +88,11 @@ form[action^="/TDClient/3292/SSC/"] {
 		overflow: auto;
 		z-index: 999;
 	}
-	#sscTOC::-webkit-scrollbar {
+	#vccsTOC::-webkit-scrollbar {
 		display: none;
 	}
 
-	#sscTOC::before {
+	#vccsTOC::before {
 		content: 'Table of Contents';
 		font-size: 20px;
 		font-weight: 500;

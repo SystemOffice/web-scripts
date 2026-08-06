@@ -1,154 +1,216 @@
-(function($) {
-  /*
-   * ページ内見出しナビゲーション
-         */
-        $.fn.stickyNavigator = function(opts) {
+(function () {
+    'use strict';
 
-                // 引数に値が存在する場合、デフォルト値を上書きする
-                var settings = $.extend({}, $.fn.stickyNavigator.defaults, opts);
+    var currentScript = document.currentScript || document.scripts[document.scripts.length - 1];
+    var baseURL = '';
+    if (currentScript && currentScript.src) {
+        baseURL = currentScript.src.split('/').slice(0, -1).join('/') + '/';
+    }
 
-                var self = $(this);
+    var defaultOptions = {
+        wrapselector: document,
+        targetselector: 'h2,h3',
+        adjustment: 10,
+        includeTOCHeight: true
+    };
 
-                if (settings.includeTOCHeight){
-                        settings.adjustment = settings.adjustment + self.height();
-                }
+    function addStylesheet(href) {
+        if (!href) {
+            return;
+        }
+        if (document.head.querySelector('link[href="' + href + '"]')) {
+            return;
+        }
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.type = 'text/css';
+        document.head.appendChild(link);
+    }
 
-                var targets = $(settings.wrapselector).find(settings.targetselector);
-                if (self.length === 0 || targets.length === 0) {
-                        return;
-                }
+    function getHeaderName(text) {
+        if (!text) {
+            return 'section';
+        }
+        return text.trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^A-Za-z0-9\-_]/g, '')
+            .replace(/^-+|-+$/g, '')
+            .toLowerCase() || 'section';
+    }
 
-                var toclink = document.createElement('link');
-                toclink.setAttribute('rel', 'stylesheet');
-                toclink.setAttribute('href', baseURL + 'tdx-toc.css');
-                document.head.appendChild(toclink);
+    function resolveElement(selector) {
+        if (!selector) {
+            return document;
+        }
+        if (selector === document || selector instanceof Element) {
+            return selector;
+        }
+        if (typeof selector === 'string') {
+            return document.querySelector(selector) || document;
+        }
+        return document;
+    }
 
+    function scrollToHeading(heading, adjustment) {
+        if (!heading) {
+            return;
+        }
+        heading.style.scrollMarginTop = (adjustment || 0) + 'px';
+        // var top = heading.getBoundingClientRect().top + window.scrollY - (adjustment || 0) - 10;
+        // window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+    }
 
-                var getHeaderName = function(txt){
-                        return txt.replace(/[^a-zA-Z0-9]/g, '');
-                }
+    function findActiveIndex(headings, adjustment) {
+        var scrollPosition = window.scrollY + (adjustment || 0) + 20;
+        var activeIndex = -1;
+        headings.forEach(function (heading, index) {
+            var headingTop = heading.getBoundingClientRect().top + window.scrollY;
+            if (scrollPosition >= headingTop) {
+                activeIndex = index;
+            }
+        });
+        return activeIndex;
+    }
 
-                var navigationMenu = [
-                        '<div id="sscTOC" class="side-left collapse in"><ul>',
-                        targets.map(function() {
-                                var target = $(this),
-                                text = target.text();
-                                var headerName = getHeaderName(text);
-                                this.setAttribute('name',headerName);
-                                var num = Math.floor( Math.random() * 99999999 );
-                                var href = 'js-nav-'+num;
-                                target.addClass('js-nav');
-                                target.addClass(href);
-                                target.data('num', num);
-                                var clazz = 'nav-'+target[0].tagName.toLowerCase();
-                                clazz = clazz + ' nav-'+num;
-                                return '<li class="'+clazz+'"><a href="#' + headerName + '" data-href=".'+href+'">' + $('<dummy>').text(text).html() + '</li>';
-                        }).get().join(''),
-                        '</ul></div>'
-                ].join('');
-
-                self.contents().first().replaceWith(navigationMenu);
-
-                // TOC link click behavior
-                /* self.find('li>a').click(function(e) {
-                        var a = $(this),
-                                href = a.data('href'),
-                                to = $(href);
-                        e.preventDefault();
-                        $('html, body').animate({scrollTop: to.offset().top - settings.adjustment - 140}, 500);
-                });
-                */
-
-
-                // 現在表示中のインデックスを見つける
-                // called from the style selection (highlighting) function
-                var findIndexNum = function() {
-                        var scrollTop = $(window).scrollTop();
-                        var num = '';
-                        if (scrollTop < $('.js-nav:eq(0)').offset().top - settings.adjustment - 140) {
-                                return num;
-                        }
-                        $('.js-nav').each(function (i) {
-                                if (i === 0) {
-                                        return;
-                                }
-                                //console.log(scrollTop);
-                                //console.log($(this).offset().top);
-                                if (Math.floor(scrollTop) < (Math.floor($(this).offset().top)-1 - settings.adjustment - 140)) {
-                                        num = $('.js-nav:eq('+(i-1)+')').data('num');
-                                        return false;
-                                }
-                        });
-                        if (num === '') {
-                                num = $('.js-nav:last').data('num');
-                        }
-                        return num;
-                }
-
-                // 見出しナビゲーションのカレントを選択します。
-                // add the style
-                var selectCurrent = function(obj) {
-                        if ($(obj).scrollTop() > (self.parent().offset().top - settings.adjustment)) {
-                                var num = findIndexNum();
-                                self.find('li').removeClass('current');
-                                self.find('li.nav-'+num).addClass('current');
-                                document.querySelector('li.nav-'+num).scrollIntoView({align: false, behavior: 'smooth',});
-                        }
-                }
-
-                $(window).scroll(function () {
-                        selectCurrent(this);
-                });
-                selectCurrent(window);
-
-                return this;
+    function updateCurrentState(instance, settings) {
+        if (!instance || !instance.navigation || !instance.headings.length) {
+            return;
+        }
+        var parent = instance.container.parentElement;
+        if (parent) {
+            var parentTop = parent.getBoundingClientRect().top + window.scrollY;
+            if (window.scrollY <= parentTop - settings.adjustment) {
+                return;
+            }
         }
 
-        $.fn.stickyNavigator.defaults = {
-                wrapselector    : document,
-                targetselector  : "h2,h3",
-                adjustment              : 160,
-                includeTOCHeight: true
+        var activeIndex = findActiveIndex(Array.from(instance.headings), settings.adjustment);
+        if (activeIndex < 0) {
+            return;
+        }
+
+        instance.listItems.forEach(function (item) {
+            item.classList.remove('current');
+        });
+
+        var activeItem = instance.navigation.querySelector('li.nav-' + activeIndex);
+        if (activeItem) {
+            activeItem.classList.add('current');
+            activeItem.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+        }
+    }
+
+    function createNavigationMenu(container, headings, settings) {
+        var usedIds = new Set();
+        var list = document.createElement('ul');
+
+        headings.forEach(function (heading, index) {
+            var text = heading.textContent.trim();
+            var headerName = getHeaderName(text);
+            var uniqueId = headerName || 'section';
+            var suffix = 1;
+            while (usedIds.has(uniqueId)) {
+                uniqueId = headerName + '-' + suffix;
+                suffix += 1;
+            }
+            usedIds.add(uniqueId);
+
+            heading.id = uniqueId;
+            heading.classList.add('js-nav');
+            heading.dataset.num = index;
+
+            var listItem = document.createElement('li');
+            listItem.classList.add('nav-' + heading.tagName.toLowerCase(), 'nav-' + index);
+
+            var anchor = document.createElement('a');
+            anchor.href = '#' + uniqueId;
+            anchor.textContent = text;
+
+
+            listItem.appendChild(anchor);
+            list.appendChild(listItem);
+        });
+
+        var navigation = document.createElement('div');
+        navigation.id = 'vccsTOC';
+        navigation.className = 'vccsTOC';
+        navigation.appendChild(list);
+
+        container.innerHTML = '';
+        container.appendChild(navigation);
+
+        return {
+            container: container,
+            navigation: navigation,
+            listItems: navigation.querySelectorAll('li'),
+            headings: headings
         };
+    }
 
-})(jQuery);
-
-// $('#ctl00_ctl00_cpContent_cpContent_divBody').prepend('<aside class="side-left"id="sticky-navigator">Table of Contents</aside>');
-
-$('aside[data-target="sticky-navigator"]').stickyNavigator({
-  // options here
-  wrapselector:'#ctl00_ctl00_cpContent_cpContent_divBody',
-  targetselector: "h2"
-});
-
-function setUpSSCKB (){
-var baseURLObj = document.currentScript.src;
-var baseURL = baseURLObj.split('/').slice(0, -1).join('/')+'/';
-        if (document.location.href.indexOf('SSC/KB/ArticleDet')>-1){
-
-                $('.col-md-4').insertBefore( $ ("#divMainContent"));
-
-                $('.col-md-4').stickyNavigator({
-                        // options here
-                        wrapselector:'#ctl00_ctl00_cpContent_cpContent_divBody',
-                        targetselector: "h1,h2,h3",
-                        includeTOCHeight: false,
-                        adjustment: 0
-                });
-
-                $('<div id="tocChevron" data-target="#sscTOC" data-toggle="collapse"><i class="fa fa-chevron-circle-down"></i></div>').insertBefore('#sscTOC');
-		var isNotLoggedIn = $('form:has(a[href*="Login.aspx"])');
-		if (isNotLoggedIn.length == -1){
-			// i.e. they ARE logged in
-	                // $('#sscTOC').attr('class','collapse');
-		}
-		var isTechnician = $('form:has(.user-profile-menu a[href*="TDNext"])');
-		if (isTechnician.length == 1){
-			// i.e. they are a technician
-			$('#sscTOC').attr('class','collapse');
-		}
+    function initStickyNavigator(container, options) {
+        if (!container) {
+            return null;
         }
-}
 
-setUpSSCKB();
+        var settings = Object.assign({}, defaultOptions, options);
+        var wrap = resolveElement(settings.wrapselector);
+        var headings = Array.from(wrap.querySelectorAll(settings.targetselector));
+
+        if (!headings.length) {
+            return null;
+        }
+
+        addStylesheet(baseURL + 'tdx-toc.css');
+        var instance = createNavigationMenu(container, headings, settings);
+
+        if (settings.includeTOCHeight) {
+            settings.adjustment += instance.container.offsetHeight;
+        }
+
+        // Create the style element
+        const styleTag = document.createElement("style");
+
+        // Add your CSS rules using a template literal
+        // adjust for the height of the TOC so that the headings are not hidden behind it when scrolled to
+        styleTag.textContent = `
+                ${settings.targetselector} {
+                    scroll-margin-top: ${settings.adjustment}px;
+                }
+        `;
+
+        // Append it to the head of the document
+        document.head.appendChild(styleTag);
+
+        // Add click event listener to the navigation links in order to highlight the current section when clicked
+        window.addEventListener('scroll', function () {
+            updateCurrentState(instance, settings);
+        }, { passive: true }); 
+
+        updateCurrentState(instance, settings);
+        return instance;
+    }
+
+    function insertBefore(target, reference) {
+        if (target && reference && reference.parentNode) {
+            reference.parentNode.insertBefore(target, reference);
+        }
+    }
+
+    function init() {
+        var tocAsides = document.querySelectorAll('aside[data-target="sticky-navigator"]');
+        tocAsides.forEach(function (aside) {
+            initStickyNavigator(aside, {
+                wrapselector: '#ctl00_ctl00_cpContent_cpContent_divBody',
+                targetselector: 'h2'
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 
