@@ -14,6 +14,13 @@ function parseQueryString() {
                 form[key].value = decodeURIComponent(value);
             }
         }
+        // update the WYSIWYG editor value if "d" query string parameter is present
+        if (key == 'd'){
+            const ckEditor = window.CKEDITOR?.instances['attribute2937_Content'];
+            if (ckEditor) {
+                ckEditor.setData(decodeURIComponent(value));
+            }
+        }
     });
 }
 parseQueryString();
