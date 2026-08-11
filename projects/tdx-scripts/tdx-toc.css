@@ -10,8 +10,6 @@ html {
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.08);
         border: 1px solid #f4f4f4;
         padding: 10px;
-        width: 100%;
-        max-width: 100%;
         display: block;
         top: 0;
         z-index: 1000;
@@ -42,8 +40,7 @@ html {
     }
 
 aside[data-target="sticky-navigator"] {
-        display: block;
-        width: 100%;
+        display: flex;
         margin-bottom: 0;
         padding: 0;
         border: none;
@@ -58,8 +55,7 @@ aside[data-target="sticky-navigator"] {
 .side-left {
         float: none;
         margin-right: 0;
-        width: 100%;
-        max-width: 100%;
+        display: flex
 }
 
 @media screen and (min-width: 700px) {

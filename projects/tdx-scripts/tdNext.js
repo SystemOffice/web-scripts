@@ -43,29 +43,38 @@ function addToMyWorkButton(doc) {
     const myWorkBtn = doc.getElementById('btnMyWork');
     if (myWorkBtn && myWorkBtn.innerText.includes('Add to')) {
 
-        const navEl = doc.getElementById('divTabHeader');
+        // works for tasks and tickets
+        const navEl = doc.querySelector('#divTabHeader, #divButtons');
         if (!navEl) return;
 
         const myWorkBtnCustom = doc.querySelector('button#btnAddToMyWorkCustom');
         if (myWorkBtnCustom) return; // Prevent duplicate insertion 
     
-        const ticketButtons = navEl.querySelectorAll('li button');
+        const ticketButtons = navEl.querySelectorAll('li button, .tdx-button-bar button');
         if (ticketButtons.length === 0) return; // Safety check
         const lastButton = ticketButtons[ticketButtons.length - 2];
         
-        const newItem = doc.createElement('li');
+        let targetLocation = lastButton.parentNode;
+		let newItem = doc.createElement('li');
+        // but if it's a task, we need to insert it differently
+		if (navEl.id !== 'divTabHeader'){
+			newItem = doc.createElement('span');
+			targetLocation = lastButton;
+		}
+
         newItem.innerHTML = `
             <button type="button" id="btnAddToMyWorkCustom" class="btn btn-primary btn-sm" title="Add to My Work">
                 <span class="fa-solid fa-plus fa-nopad" aria-hidden="true"></span>
                 <span class="hidden-xs padding-left-xs">Add to My Work</span>
             </button>`;
         
+        // if the button is clicked, hide it and trigger the original button
         newItem.addEventListener('click', () => {
             newItem.style.display='none';
             myWorkBtn.click();
         });
 
-		lastButton.parentNode.insertAdjacentElement("afterend", newItem);
+		targetLocation.insertAdjacentElement("afterend", newItem);
     }
 }
 
@@ -317,6 +326,13 @@ function ticketProcessing(){
             addToMyWorkButton(iframeDocument);
             // fix the details section
 		    fixDetails(iframeDocument);
+		}
+
+        let tdxTaskDetails = iframeDocument.querySelector('#upTaskDetail') || document.querySelector('#upTaskDetail');
+		if (tdxTaskDetails){
+			// continue;
+            // add a button to add to your work
+            addToMyWorkButton(iframeDocument);
 		}
 		
         let tdxUpdateEdit = iframeDocument.querySelector('#frmTicketUpdate, #frmTicketEdit') || document.querySelector('#frmTicketUpdate, #frmTicketEdit');
