@@ -11,7 +11,18 @@ function parseQueryString() {
         // URLSearchParams automatically decodes values
         for (let form of document.forms) {
             if (form[key]) {
-                form[key].value = decodeURIComponent(value);
+                if (form[key].type === 'checkbox' || form[key].type === 'radio'){
+                    form[key].click();
+                }
+                else {
+                    form[key].value = decodeURIComponent(value);
+                }            }
+        }
+        // update the WYSIWYG editor value if "d" query string parameter is present
+        if (key == 'd'){
+            const ckEditor = window.CKEDITOR?.instances['attribute2937_Content'];
+            if (ckEditor) {
+                ckEditor.setData(decodeURIComponent(value));
             }
         }
     });
