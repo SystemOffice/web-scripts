@@ -25,13 +25,6 @@ function parseQueryString() {
                 ckEditor.setData(decodeURIComponent(value));
             }
         }
-        // update the WYSIWYG editor value if "d" query string parameter is present
-        if (key == 'd'){
-            const ckEditor = window.CKEDITOR?.instances['attribute2937_Content'];
-            if (ckEditor) {
-                ckEditor.setData(decodeURIComponent(value));
-            }
-        }
     });
 }
 parseQueryString();
@@ -895,8 +888,99 @@ function requireFormElementValues() {
     submitBtn.prop('disabled', !validateDropdowns());
 }
 
+function hideNonApproveArticlesByDefault() {
+  // Prevent duplicate insertion
+  if (document.getElementById('tdx-approval-toggle-container')) return;
+
+  if (!document.querySelector('#divResults .row, div[class*="result"]')) {
+    return;
+  }
+
+  // Function to filter/hide non-approved articles and their adjacent <hr> tags
+  function filterArticles(showAll) {
+    const articles = document.querySelectorAll('.search-result, [class*="search-result"], .media-body, #divResults .row, div[class*="Result"]');
+    
+    articles.forEach(article => {
+      // Check if item contains the "Approved" badge/text
+      const isApproved = article.innerText.includes('Approved') && !article.innerText.includes('Not Approved');
+
+   	  const isKBArtcle = article.querySelector('a[href*="/KB/"]');
+
+      // Target the immediate next element if it is an <hr> tag
+      let nextElem = article.nextElementSibling;
+      while (nextElem && nextElem.tagName !== 'HR' && !nextElem.classList.contains('search-result')) {
+        // Look ahead within immediate wrappers if needed
+        nextElem = nextElem.nextElementSibling;
+      }
+
+      if (!isApproved && isKBArtcle) {
+        article.style.display = showAll ? '' : 'none';
+        if (nextElem && nextElem.tagName === 'HR') {
+          nextElem.style.display = showAll ? '' : 'none';
+        }
+      } else {
+        article.style.display = '';
+        if (nextElem && nextElem.tagName === 'HR') {
+          nextElem.style.display = '';
+        }
+      }
+    });
+  }
+
+  // Target the second search input container
+  const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"]');
+  const targetSearchInput = searchInputs[1] || searchInputs[0];
+
+  if (!targetSearchInput) {
+    console.error('Could not find search box');
+    return;
+  }
+
+  const searchWrapper = targetSearchInput.closest('.input-group') || targetSearchInput.parentElement;
+
+  // Create UI container
+  const container = document.createElement('div');
+  container.id = 'tdx-approval-toggle-container';
+  container.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #333;
+  `;
+
+  // Create Checkbox element
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.id = 'show-unapproved-chk';
+  checkbox.style.cssText = 'cursor: pointer; width: 16px; height: 16px; margin: 0;';
+
+  // Create Label element
+  const label = document.createElement('label');
+  label.htmlFor = 'show-unapproved-chk';
+  label.innerText = 'Show Unapproved Articles';
+  label.style.cssText = 'cursor: pointer; margin: 0; user-select: none; font-weight: normal;';
+
+  // Assemble and insert under the search bar
+  container.appendChild(checkbox);
+  container.appendChild(label);
+  searchWrapper.insertAdjacentElement('afterend', container);
+
+  // Toggle visibility on checkbox change
+  checkbox.addEventListener('change', (e) => {
+    filterArticles(e.target.checked);
+  });
+
+  // Run initial filter to hide non-approved items
+  filterArticles(false);
+}
+
 $(document).ready(function () {
     requireFormElementValues();
     validateFormWithLibrary();
     addElementAttributes();
+    hideNonApproveArticlesByDefault();
 });
