@@ -2,6 +2,10 @@ html {
   scroll-behavior: smooth;
 }
 
+aside > details {
+        background: #fafafa;
+}
+
 #vccsTOC, .ssc-toc {
         background: #fafafa;
         line-height: 1.6;
