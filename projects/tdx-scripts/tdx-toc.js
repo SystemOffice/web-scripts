@@ -205,13 +205,22 @@
             list.appendChild(listItem);
         });
 
+        var details = document.createElement('details');
+        details.open = true;
+
+        var summary = document.createElement('summary');
+        summary.textContent = 'Table of contents';
+
         var navigation = document.createElement('div');
         navigation.id = 'vccsTOC';
         navigation.className = 'vccsTOC';
         navigation.appendChild(list);
 
+        details.appendChild(summary);
+        details.appendChild(navigation);
+
         container.innerHTML = '';
-        container.appendChild(navigation);
+        container.appendChild(details);
 
         return {
             container: container,
