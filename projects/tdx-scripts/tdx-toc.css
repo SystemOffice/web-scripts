@@ -6,6 +6,10 @@ aside > details {
         background: #fafafa;
 }
 
+aside > details:not([open]) {
+    border:1px solid #00539b;
+}
+
 #vccsTOC, .ssc-toc {
         background: #fafafa;
         line-height: 1.6;

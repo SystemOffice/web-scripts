@@ -21,6 +21,7 @@ window.INTEGRATION_STATUS_SERVICES = [
   { name: 'OpenStax', base: 'https://status.openstax.org', type: 'statuspage' },
   { name: 'Instructure (Canvas)', base: 'https://status.instructure.com', type: 'statuspage' },
   { name: 'Lucid', base: 'https://status.lucid.co', type: 'statuspage' },
+  { name: 'WileyPlus', base: 'https://status.wileyplus.com', type: 'statuspage' },
   { name: 'ZyBooks', base: 'https://status.zybooks.com', type: 'statuspage' },
   { name: 'CompTIA', base: 'https://status.comptia.net', type: 'link' },
   { name: 'Hypothesis', base: 'https://web.hypothes.is/status/', type: 'link' },
