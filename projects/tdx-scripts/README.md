@@ -28,7 +28,7 @@
 - Collapse Ticket Details
 - form input validation, e.g. type=email, pattern=^[0-9]{7}$
 - HTML element attribute updates - e.g. disabled
-<img width="818" height="185" alt="2026-08-12-11_Work_Management__Service_Request_Detail_-_24348600_4WPyGZ9ai3" src="https://github.com/user-attachments/assets/d47c04e6-fce0-4e20-b562-283e13fa436f" />
+<img width="818" height="185" alt="634946015-d47c04e6-fce0-4e20-b562-283e13fa436f" src="https://github.com/user-attachments/assets/1cfb529d-88b7-4412-b6f1-3a0545228192" />
 
 `services-status.html` demonstrates integrating our own outage notices via an iPaaS report with vendor statuses pulled from their status pages
 
