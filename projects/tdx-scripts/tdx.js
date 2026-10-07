@@ -984,9 +984,6 @@ function hideNonApproveArticlesByDefault() {
  * existing click handlers), so TDX's search logic stays in sync.
  */
 function convertSearchScopesToRadios() {
-	if (!isSandbox()){
-		return;
-	}
 	
     // Custom radio labels (keyed by TDX component code)
     var LABELS = { kb: 'Articles', sc: 'Services' };

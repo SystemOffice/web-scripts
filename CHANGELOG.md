@@ -1,3 +1,5 @@
+- 2026-10-07 — tdx-scripts v0.4.1
+  - feat(project): update version to 0.4.0 and remove sandbox check from search scope conversion
 - 2026-10-07 — tdx-scripts v0.4.0
 - 2026-10-07 — tdx-scripts v0.3.4
   - feat(search): replace dropdown with radio buttons for search scopes
