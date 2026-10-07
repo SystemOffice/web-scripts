@@ -1,3 +1,4 @@
+- 2026-10-07 — tdx-scripts v0.4.0
 - 2026-10-07 — tdx-scripts v0.3.4
   - feat(search): replace dropdown with radio buttons for search scopes
 - 2025-08-13 — chat-widgets v0.1.0
