@@ -978,9 +978,73 @@ function hideNonApproveArticlesByDefault() {
   filterArticles(false);
 }
 
+/*
+ * Replace the TDX site search "scope" dropdown with radio buttons under each
+ * search box. Radios drive the original dropdown's menu items (via their
+ * existing click handlers), so TDX's search logic stays in sync.
+ */
+function convertSearchScopesToRadios() {
+	if (!isSandbox()){
+		return;
+	}
+	
+    // Custom radio labels (keyed by TDX component code)
+    var LABELS = { kb: 'Articles', sc: 'Services' };
+
+    $('button[id^="SiteSearch-filter-"]').each(function () {
+        var $btn = $(this);
+        if ($btn.data('radiosBuilt')) return;          // don't build twice
+        $btn.data('radiosBuilt', true);
+
+        var uid = this.id.replace('SiteSearch-filter-', '');
+        var $group = $btn.closest('.input-group.site-search');
+        var current = $btn.data('component') || $btn.attr('data-component');
+
+        var $fs = $('<fieldset class="site-search-scope"></fieldset>')
+            .css({ border: 0, margin: '6px 0 0', padding: 0, width: '100%' })
+            .append('<legend class="sr-only">Search scope</legend>');
+
+        $group.find('.dropdown-menu a[data-component]').each(function () {
+            var $a = $(this);
+            var comp = $a.data('component');
+            var rid = 'SiteSearch-scope-' + uid + '-' + comp;
+
+            var $radio = $('<input type="radio">')
+                .attr({ id: rid, name: 'SiteSearch-scope-' + uid, value: comp })
+                .prop('checked', comp === current)
+                .on('change', function () {
+                    if (this.checked) $a.trigger('click');   // let TDX set the scope
+                });
+
+            $('<label></label>')
+                .attr('for', rid)
+                .css({ fontWeight: 'normal', marginRight: '10px', cursor: 'pointer', whiteSpace: 'nowrap' })
+                .append($radio, ' ' + (LABELS[comp] || $a.data('componentText')))
+                .appendTo($fs);
+        });
+
+        // Hide the dropdown toggle (and its wrapper if it holds nothing else)
+        var $wrap = $btn.closest('.input-group-btn');
+        $btn.hide();
+        if ($wrap.find('button:visible').length === 0) $wrap.hide();
+
+        // The text input is no longer the first child, so its left corners are
+        // square and cover the group's rounded border. Round them to match.
+        var gs = window.getComputedStyle($group[0]);
+        var r = Math.max((parseFloat(gs.borderTopLeftRadius) || 0) - (parseFloat(gs.borderLeftWidth) || 0), 0) + 'px';
+        $group.find('input[id^="SiteSearch-text-"]').each(function () {
+            this.style.setProperty('border-top-left-radius', r, 'important');
+            this.style.setProperty('border-bottom-left-radius', r, 'important');
+        });
+
+        $group.after($fs);
+    });
+}
+
 $(document).ready(function () {
     requireFormElementValues();
     validateFormWithLibrary();
     addElementAttributes();
+    convertSearchScopesToRadios();
     hideNonApproveArticlesByDefault();
 });
