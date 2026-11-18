@@ -24,6 +24,9 @@ const DISRUPTIVE_OUTAGE_TYPES = new Set(['Service Degradation', 'Unscheduled Out
 const UPTIME_BAR_DAYS = 90;
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
+/** KB article listing the recurring standard maintenance windows. */
+const STANDARD_MAINTENANCE_URL = 'https://help.vccs.edu/TDClient/1981/Portal/KB/Article/138154/Standard-Maintenance-Windows';
+
 /**
  * fetchReportRows(url)
  * Fetches a TDX "get-report" Flow endpoint and returns its DataRows array.
@@ -836,7 +839,10 @@ function renderStatusPage(services, notices, options = {}) {
             <p class="sts-updated">Updated ${escapeHtml(new Date().toLocaleString())}</p>
           </div>
           <div class="sts-header-actions">
-            <button class="sts-refresh-btn" type="button">Refresh now</button>
+            <div class="sts-header-buttons">
+              <a class="sts-maint-btn" href="${STANDARD_MAINTENANCE_URL}" target="_blank" rel="noopener noreferrer" aria-label="Standard Maintenance (opens in a new tab)">Standard Maintenance</a>
+              <button class="sts-refresh-btn" type="button">Refresh now</button>
+            </div>
             <p class="sts-meta">Auto-refreshes every 10 minutes</p>
           </div>
         </div>
