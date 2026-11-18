@@ -21,6 +21,7 @@
 - Article table of contents
 - Do not show attachments box if there are none (pure CSS)
 - Hide elements from non-technicians within article (pure CSS)
+- Convert the search drop-down to radio buttons
 
 `tdNext.js` adds customization to the TDX Work Management interface. It can be included by using a javascript include in a TDNext HTML module.
 - Add "Add to my work" button to tickets and tasks

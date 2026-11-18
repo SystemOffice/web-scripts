@@ -1,3 +1,6 @@
+- 2026-11-18 — tdx-scripts v0.4.2
+  - feat(tdx-scripts-wip): add Standard Maintenance button to services status header
+  - Add more info on index.html
 - 2026-10-07 — tdx-scripts v0.4.1
   - feat(project): update version to 0.4.0 and remove sandbox check from search scope conversion
 - 2026-10-07 — tdx-scripts v0.4.0

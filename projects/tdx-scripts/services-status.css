@@ -84,6 +84,43 @@
   gap: 8px;
 }
 
+#tdx-services-status .sts-header-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Buttons and links don't share a default font, so pin both header actions to one stack. */
+#tdx-services-status .sts-maint-btn,
+#tdx-services-status .sts-refresh-btn {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+#tdx-services-status .sts-maint-btn {
+  display: inline-block;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-primary);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: normal;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#tdx-services-status .sts-maint-btn:hover,
+#tdx-services-status .sts-maint-btn:focus-visible {
+  background: var(--color-primary);
+  color: #fff;
+  text-decoration: none;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 83, 155, 0.15);
+}
+
 #tdx-services-status .sts-refresh-btn {
   appearance: none;
   border: 1px solid transparent;
